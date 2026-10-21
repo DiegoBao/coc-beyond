@@ -151,6 +151,30 @@ dialog hr{border:0;border-top:1px solid var(--line);margin:.8rem 0}
   .tile .tn{color:#000!important}
 }
 
+/* creation wizard */
+#wiz{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
+#wiz[hidden]{display:none}
+.wh{display:flex;align-items:center;gap:.8rem;padding:.6rem .9rem;border-bottom:1px solid var(--line);padding-top:max(.6rem,env(safe-area-inset-top))}
+.wsteps{display:flex;gap:.3rem;flex:1;overflow-x:auto;scrollbar-width:none}
+.wsteps::-webkit-scrollbar{display:none}
+.wdot{white-space:nowrap;font-size:.8rem;padding:.2rem .6rem;border-radius:999px;color:var(--muted);border:1px solid transparent}
+.wdot.on{color:#1a1405;background:var(--accent);font-weight:600}
+.wdot.done{color:var(--text);border-color:var(--line)}
+.wbody{flex:1;overflow:auto;padding:.9rem;width:100%;max-width:900px;margin:0 auto}
+.wf{display:flex;gap:.6rem;justify-content:space-between;align-items:center;padding:.6rem .9rem;border-top:1px solid var(--line);padding-bottom:max(.6rem,env(safe-area-inset-bottom))}
+.wf .muted{flex:1;text-align:center;font-size:.9rem;color:#e0a95a}
+.method{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin:.8rem 0}
+.method button{text-align:left;padding:1rem;min-height:150px;white-space:normal;line-height:1.45}
+.method h2{margin-bottom:.4rem}
+.wpool{position:sticky;top:-.9rem;z-index:2;background:var(--bg);padding:.6rem 0;font-size:1.1rem;border-bottom:1px solid var(--line);margin-bottom:.3rem}
+.wrow{display:grid;grid-template-columns:1fr 50px repeat(4,50px);gap:.3rem;align-items:center;border-bottom:1px solid var(--line);padding:.25rem 0}
+.wrow[hidden],.card[hidden]{display:none}
+.qrow{display:grid;grid-template-columns:1fr 50px 110px;gap:.4rem;align-items:center;border-bottom:1px solid var(--line);padding:.3rem 0}
+.qrow small{display:block}
+.qrow input{padding:.3rem .5rem;min-height:36px}
+.wrow input{padding:.3rem .5rem;min-height:36px}
+.wrow .sm{padding:.2rem 0}
+.wrow small{display:block}
 /* portrait */
 .invwrap{display:flex;gap:.9rem;align-items:flex-start;flex-wrap:wrap}
 .pwrap{display:flex;flex-direction:column;gap:.4rem;align-items:center}
@@ -191,6 +215,7 @@ dialog hr{border:0;border-top:1px solid var(--line);margin:.8rem 0}
 <header id="hd"></header>
 <main id="main"></main>
 <div id="print" aria-hidden="true"></div>
+<div id="wiz" hidden></div>
 <div id="toast" role="status" onclick="this.classList.remove('show')"></div>
 <dialog id="dlg"></dialog>
 <input type="file" id="filein" accept=".json,application/json" hidden>
@@ -552,6 +577,470 @@ function openAdjust(kind) {
 }
 
 /* ---------- tabs ---------- */
+/* ---------- character creation wizard ----------
+   While it runs, S is a fresh draft sheet; Cancel restores the previous one. */
+let W = null;
+const WSTEPS = ['Method', 'Characteristics', 'About you', 'Occupation', 'Occupation skills', 'Personal interests', 'Review'];
+const QF = [80, 70, 60, 60, 50, 50, 50, 40];
+const STATK = Object.keys(STAT_NAMES);
+const alpha = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+const isCR = s => /^credit rating/i.test(s.name);
+const isMythos = s => /^cthulhu mythos/i.test(s.name);
+/* skills that come in several specialisations (Art/Craft, Science, Pilot, …) can be taken more than once */
+const isMulti = s => /\(specify\)|^(language \(other\)|fighting|firearms|art\/craft|science|pilot|survival)/i.test(s.name);
+function cloneSkill(s) {
+  const root = s.name.replace(/\s*\(.*$/, '');
+  const c = { id: uid(), name: `${root} (specify)`, base: s.base, occ: 0, int: 0, other: 0, tick: false, clone: true };
+  S.skills.push(c);
+  return c;
+}
+const nameInput = s => { // lets the player type the specialisation, e.g. "Science (Botany)"
+  const i = h('input', { value: s.name, placeholder: 'Specialisation' });
+  i.addEventListener('input', () => { s.name = i.value; saveSoon(); });
+  return i;
+};
+
+function ageRules(a) {
+  const r = (key, pool, from, app, edu, checks) => ({ key, pool, from, app, edu, checks });
+  const phys = ['STR', 'CON', 'DEX'];
+  if (a < 20) return { ...r('y', 5, ['STR', 'SIZ'], 0, -5, 0), luck2: true };
+  if (a < 40) return r('a', 0, [], 0, 0, 1);
+  if (a < 50) return r('40', 5, phys, -5, 0, 2);
+  if (a < 60) return r('50', 10, phys, -10, 0, 3);
+  if (a < 70) return r('60', 20, phys, -15, 0, 4);
+  if (a < 80) return r('70', 40, phys, -20, 0, 4);
+  return r('80', 80, phys, -25, 0, 4);
+}
+const wl = fn => { // like live(), but refreshed by the wizard
+  const s = document.createElement('span');
+  const f = () => { const v = String(fn()); if (s.textContent !== v) s.textContent = v; };
+  W.calcs.push(f); f();
+  return s;
+};
+/* final characteristics = rolled/assigned base + age adjustments */
+function wizSync() {
+  const r = ageRules(num(S.info.age));
+  if (W.bracket !== r.key) { W.bracket = r.key; W.adj = {}; W.eduGain = 0; W.eduLog = ''; W.eduDone = false; }
+  const st = { ...W.base };
+  for (const k of r.from) st[k] -= num(W.adj[k]);
+  st.APP += r.app; st.EDU += r.edu;
+  st.EDU = Math.min(99, st.EDU + W.eduGain);
+  for (const k of STATK) S.stats[k] = clamp(st[k], 0, 99);
+  commit();
+}
+function wupd() { wizSync(); W.calcs.forEach(f => f()); wnav(); }
+function wnav() { const m = W.valid(); W.next.disabled = !!m; W.msg.textContent = m; }
+
+function startWizard() {
+  persist();
+  W = {
+    step: 0, method: null, prev: { S, id: curId }, calcs: [],
+    base: Object.fromEntries(STATK.map(k => [k, 0])), adj: {}, bracket: '', eduGain: 0, eduLog: '', eduDone: false,
+    q: { vals: {}, extra: {}, pick: new Set() }, // quick-fire: values per occupation skill, extra points, 4 boosted skills
+    luckSet: false, luckLog: '', custom: false, cf: { name: '', points: 0, min: 0, max: 99, ids: new Set() },
+  };
+  S = blank(); curId = uid(); ui.edit = false; ui.occOnly = false;
+  document.body.style.overflow = 'hidden';
+  $('#wiz').hidden = false;
+  wizSync();
+  renderWiz();
+}
+function wizClose() { W = null; document.body.style.overflow = ''; $('#wiz').hidden = true; }
+function wcancel() {
+  if (!confirm('Discard this new investigator?')) return;
+  clearTimeout(saveTimer);
+  try { localStorage.removeItem(PFX + curId); } catch (e) { /* ignore */ }
+  const p = W.prev; wizClose(); S = p.S; curId = p.id; persist(); fullRender();
+}
+function wskip() { // leave the wizard and keep the blank draft
+  wizClose(); persist(); fullRender(); ui.tab = 'sheet'; renderTab();
+}
+function wnext() {
+  if (W.valid()) return;
+  if (W.step === WSTEPS.length - 1) return wizFinish();
+  W.step++; renderWiz();
+}
+function wizFinish() {
+  S.skills.sort(alpha);
+  S.creation = true; normalize(); S.creation = false; // vitals start full, then play mode
+  S.dayStart = S.cur.san;
+  persist(); wizClose(); fullRender();
+  ui.tab = 'sheet'; renderTab(); window.scrollTo(0, 0);
+  toast('Investigator created', [S.info.name || 'Unnamed investigator', 'Add a portrait and backstory from the Sheet and Backstory tabs.'], 'warn');
+}
+
+function renderWiz() {
+  W.calcs = [];
+  const quick = W.method === 'quick';
+  const built = [stepMethod, stepStats, stepAbout, stepOcc, quick ? stepQOccSkills : stepOccSkills, quick ? stepQPersonal : stepPersonal, stepReview][W.step]();
+  W.valid = built.valid || (() => '');
+  const last = W.step === WSTEPS.length - 1;
+  W.next = h('button', { class: 'pri', onclick: wnext }, last ? 'Create investigator' : 'Next →');
+  W.msg = h('span', { class: 'muted' });
+  $('#wiz').replaceChildren(
+    h('div', { class: 'wh' }, h('b', {}, 'New investigator'),
+      h('div', { class: 'wsteps' }, WSTEPS.map((n, i) => h('span', { class: 'wdot' + (i === W.step ? ' on' : i < W.step ? ' done' : '') }, `${i + 1}. ${n}`))),
+      h('button', { class: 'sm danger', onclick: wcancel }, 'Cancel')),
+    h('div', { class: 'wbody' }, built.el),
+    h('div', { class: 'wf' },
+      h('button', { disabled: W.step === 0, onclick: () => { W.step--; renderWiz(); } }, '← Back'),
+      W.msg, W.step === 0 ? h('span') : W.next));
+  wnav();
+  $('.wbody').scrollTop = 0;
+}
+
+/* step 1: method */
+function stepMethod() {
+  const pick = m => {
+    if (W.method !== m) { W.base = Object.fromEntries(STATK.map(k => [k, 0])); W.adj = {}; W.bracket = ''; W.eduGain = 0; W.eduLog = ''; W.eduDone = false; }
+    W.method = m; W.step = 1; wizSync(); renderWiz();
+  };
+  return { el: h('div', {},
+    h('h2', {}, 'How do you want to create your investigator?'),
+    h('div', { class: 'method' },
+      h('button', { onclick: () => pick('standard') }, h('h2', {}, 'Standard method'),
+        'Roll 3d6×5 for STR, CON, DEX, APP and POW, and (2d6+6)×5 for SIZ, INT and EDU. The classic way — a little random, and you can re-roll or type in values your Keeper allows.'),
+      h('button', { onclick: () => pick('quick') }, h('h2', {}, 'Quick-fire method'),
+        'Assign the fixed set 80, 70, 60, 60, 50, 50, 50 and 40 to your characteristics, fixed values (70, 60, 60, 50, 50, 50, 40, 40, 40) to your occupation skills and Credit Rating, and boost four other skills by 20. Fast, balanced and no point-counting.')),
+    h('p', { class: 'note' }, 'Either way, the next steps cover age, occupation and skill points. ',
+      h('button', { class: 'sm', onclick: wskip }, 'Skip — start with an empty sheet'))) };
+}
+
+/* step 2: characteristics */
+function stepStats() {
+  const roll = () => {
+    const r3 = () => (rnd(6) + rnd(6) + rnd(6)) * 5, r2 = () => (rnd(6) + rnd(6) + 6) * 5;
+    Object.assign(W.base, { STR: r3(), CON: r3(), DEX: r3(), APP: r3(), POW: r3(), SIZ: r2(), INT: r2(), EDU: r2() });
+    wupd(); renderWiz();
+  };
+  if (W.method === 'standard') {
+    const grid = h('div', { class: 'stats' }, STATK.map(k => {
+      const inp = h('input', { type: 'number', inputmode: 'numeric', value: W.base[k] || '' });
+      inp.addEventListener('input', () => { W.base[k] = num(inp.value); wupd(); });
+      return h('div', { class: 'stat' },
+        h('div', { class: 'statname' }, k, h('small', {}, ['SIZ', 'INT', 'EDU'].includes(k) ? '(2d6+6)×5' : '3d6×5')),
+        inp, h('div', { class: 'sub' }, wl(() => half(W.base[k])), ' · ', wl(() => fifth(W.base[k]))));
+    }));
+    return { el: h('div', {}, h('h2', {}, 'Roll your characteristics'),
+      h('p', { class: 'note' }, 'Roll as often as your table allows, or type values in. Age adjustments come next. Typical values are 15–90.'),
+      h('div', { class: 'row', style: 'margin:.6rem 0' }, h('button', { class: 'pri', onclick: roll }, 'Roll characteristics')), grid),
+      valid: () => STATK.some(k => !W.base[k]) ? 'Roll or enter every characteristic.' : '' };
+  }
+  const remaining = () => { const r = [...QF]; let over = 0; for (const k of STATK) { if (!W.base[k]) continue; const i = r.indexOf(W.base[k]); if (i >= 0) r.splice(i, 1); else over++; } return { r, over }; };
+  const grid = h('div', { class: 'stats' }, STATK.map(k => {
+    const sel = h('select', {}, h('option', { value: 0 }, '—'), ...[80, 70, 60, 50, 40].map(v => h('option', { value: v }, v)));
+    sel.value = W.base[k] || 0;
+    sel.addEventListener('change', () => { W.base[k] = +sel.value; wupd(); });
+    return h('div', { class: 'stat' }, h('div', { class: 'statname' }, k, h('small', {}, STAT_NAMES[k])), sel,
+      h('div', { class: 'sub' }, wl(() => W.base[k] ? `${half(W.base[k])} · ${fifth(W.base[k])}` : ' ')));
+  }));
+  const shuffle = () => {
+    const v = [...QF]; for (let i = v.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [v[i], v[j]] = [v[j], v[i]]; }
+    STATK.forEach((k, i) => { W.base[k] = v[i]; }); wupd(); renderWiz();
+  };
+  return { el: h('div', {}, h('h2', {}, 'Assign your characteristics'),
+    h('p', { class: 'note' }, 'Give each characteristic one value from: 80, 70, 60, 60, 50, 50, 50, 40. Think about what your investigator is good at.'),
+    h('div', { class: 'row', style: 'margin:.6rem 0' }, h('button', { onclick: shuffle }, 'Assign randomly'),
+      h('span', {}, 'Left to assign: ', h('b', {}, wl(() => remaining().r.join(', ') || 'none')))), grid),
+    valid: () => {
+      if (STATK.some(k => !W.base[k])) return 'Assign a value to every characteristic.';
+      return remaining().over ? 'Each value can only be used as often as it is listed.' : '';
+    } };
+}
+
+/* step 3: details, age, Luck */
+function wizEdu(r) {
+  let edu = clamp(W.base.EDU + r.edu, 0, 99); const start = edu, log = [];
+  for (let i = 0; i < r.checks; i++) {
+    const roll = d100(0).r;
+    if (roll > edu) { const g = rnd(10); edu = Math.min(99, edu + g); log.push(`${roll} vs ${edu - g}: +${g}`); }
+    else log.push(`${roll} vs ${edu}: no gain`);
+  }
+  W.eduGain = edu - start; W.eduLog = log.join(' · '); W.eduDone = true; wupd();
+}
+function stepAbout() {
+  const panel = h('div', {});
+  const draw = () => {
+    const a = num(S.info.age), r = ageRules(a);
+    const sum = () => r.from.reduce((x, k) => x + num(W.adj[k]), 0);
+    const kids = [h('p', { class: 'note' }, ageNote(a))];
+    if (r.pool) kids.push(h('div', { class: 'pool', style: 'margin:.5rem 0' },
+      h('div', {}, `Deduct ${r.pool} points in total from ${r.from.join(', ')} — you choose the split.`),
+      h('div', { class: 'row', style: 'margin:.4rem 0' }, r.from.map(k => {
+        const inp = h('input', { type: 'number', inputmode: 'numeric', min: 0, value: W.adj[k] || 0, style: 'width:90px' });
+        inp.addEventListener('input', () => { W.adj[k] = Math.max(0, num(inp.value)); wupd(); });
+        return h('label', { class: 'row' }, k, inp);
+      })),
+      h('div', {}, wl(() => `Left to deduct: ${r.pool - sum()}`))));
+    if (r.app || r.edu) kids.push(h('p', {}, [r.app ? `APP ${r.app}` : '', r.edu ? `EDU ${r.edu}` : ''].filter(Boolean).join(', '), ' — applied automatically.'));
+    if (r.checks) kids.push(h('div', { class: 'row', style: 'margin:.4rem 0' },
+      h('button', { disabled: W.eduDone, onclick: () => { wizEdu(r); draw(); } }, `Roll ${r.checks} EDU improvement check${r.checks > 1 ? 's' : ''}`),
+      h('span', {}, wl(() => W.eduLog))));
+    kids.push(h('div', { class: 'muted' }, 'Characteristics now: ', wl(() => STATK.map(k => `${k} ${S.stats[k]}`).join(' · '))));
+    panel.replaceChildren(...kids);
+  };
+  const age = fld('Age', 'info.age', { type: 'number' });
+  age.querySelector('input').addEventListener('input', () => { wupd(); draw(); });
+
+  const luckIn = h('input', { type: 'number', inputmode: 'numeric', value: W.luckSet ? S.luckStart : '', style: 'width:100px' });
+  const luckLog = h('span', { class: 'muted' }, W.luckLog);
+  luckIn.addEventListener('input', () => { S.luckStart = num(luckIn.value); W.luckSet = luckIn.value !== ''; wupd(); });
+  const rollLuck = () => {
+    const r3 = () => (rnd(6) + rnd(6) + rnd(6)) * 5, rr = ageRules(num(S.info.age));
+    const x = r3(), y = rr.luck2 ? r3() : null, v = y == null ? x : Math.max(x, y);
+    S.luckStart = v; W.luckSet = true; W.luckLog = y == null ? `3d6×5 = ${x}` : `rolled ${x} and ${y} (under 20): keeping ${v}`;
+    luckIn.value = v; luckLog.textContent = W.luckLog; wupd();
+  };
+  draw();
+  return { el: h('div', {}, h('h2', {}, 'About your investigator'),
+    h('div', { class: 'grid' }, fld('Name', 'info.name'), fld('Player', 'info.player'), age, fld('Sex', 'info.sex'),
+      fld('Residence', 'info.residence'), fld('Birthplace', 'info.birthplace')),
+    h('h2', { style: 'margin-top:1rem' }, 'Age adjustments'), panel,
+    h('h2', { style: 'margin-top:1rem' }, 'Luck'),
+    h('div', { class: 'row' }, h('button', { onclick: rollLuck }, 'Roll Luck (3d6×5)'), luckIn, luckLog)),
+    valid: () => {
+      const a = num(S.info.age), r = ageRules(a);
+      if (a < 15) return 'Enter an age (15 or older).';
+      const left = r.pool - r.from.reduce((x, k) => x + num(W.adj[k]), 0);
+      if (left > 0) return `Deduct ${left} more point${left > 1 ? 's' : ''} from ${r.from.join(' / ')}.`;
+      if (left < 0) return `You have deducted ${-left} too many points.`;
+      if (r.checks && !W.eduDone) return 'Roll the EDU improvement check' + (r.checks > 1 ? 's.' : '.');
+      return W.luckSet ? '' : 'Roll or enter your Luck.';
+    } };
+}
+
+/* step 4: occupation */
+function stepOcc() {
+  if (S.occ && S.occ.opt) S.occPoints = fPoints(S.occ.opt); // stats may have changed since it was picked
+  const names = () => S.occ.ids.map(id => S.skills.find(s => s.id === id)).filter(Boolean).map(s => s.name).join(', ');
+  const summary = S.occ ? h('div', { class: 'card' },
+    h('h2', {}, S.occ.name),
+    W.method === 'quick' ? null : h('div', {}, 'Occupation points: ', h('b', {}, S.occPoints), S.occ.opt ? ` (${fText(S.occ.opt)})` : ' (custom)'),
+    h('div', {}, 'Credit Rating: ', h('b', {}, `${S.occ.cr[0]}–${S.occ.cr[1]}`)),
+    h('div', { class: 'muted', style: 'margin-top:.4rem' }, 'Occupation skills: ', names())) : h('p', { class: 'muted' }, 'No occupation chosen yet.');
+  let custom = null;
+  if (W.custom) {
+    const cf = W.cf, num2 = (label, key) => {
+      const i = h('input', { type: 'number', inputmode: 'numeric', value: cf[key] });
+      i.addEventListener('input', () => { cf[key] = num(i.value); });
+      return h('label', { class: 'fld' }, h('span', {}, label), i);
+    };
+    const nm = h('input', { value: cf.name }); nm.addEventListener('input', () => { cf.name = nm.value; });
+    const pick = S.skills.filter(s => !isCR(s) && !isMythos(s)).sort(alpha);
+    custom = h('div', { class: 'card' }, h('h2', {}, 'Custom occupation'),
+      h('div', { class: 'grid' }, h('label', { class: 'fld' }, h('span', {}, 'Occupation'), nm),
+        W.method === 'quick' ? null : num2('Occupation skill points', 'points'), num2('Credit Rating min', 'min'), num2('Credit Rating max', 'max')),
+      h('p', { class: 'note' }, 'Skill points are usually EDU×4 or EDU×2 plus another characteristic ×2. Tick the occupation skills (Credit Rating is added automatically). Skills with specialisations (Art/Craft, Science, Pilot, …) have a + button to add another copy — type its specialisation in the box.'),
+      h('div', { class: 'grid', style: 'max-height:40vh;overflow:auto' }, pick.map(s => {
+        const cb = h('input', { type: 'checkbox', checked: cf.ids.has(s.id) });
+        cb.addEventListener('change', () => { cb.checked ? cf.ids.add(s.id) : cf.ids.delete(s.id); });
+        const editable = s.clone || /\(specify\)/i.test(s.name);
+        return h('div', { class: 'row', style: 'flex-wrap:nowrap;gap:.4rem' }, cb,
+          h('div', { style: 'flex:1;min-width:0' }, editable ? nameInput(s) : s.name),
+          isMulti(s) ? h('button', { class: 'sm', title: 'Add another specialisation', onclick: () => {
+            cf.ids.add(cloneSkill(s).id); commit(); renderWiz();
+          } }, '+') : null);
+      })),
+      h('div', { style: 'margin-top:.6rem' }, h('button', { class: 'pri', onclick: () => {
+        if (!cf.name.trim()) return toast('Give the occupation a name', '');
+        S.occ = { name: cf.name.trim(), cr: [cf.min, Math.max(cf.min, cf.max)], opt: null, ids: [...cf.ids] };
+        S.info.occupation = S.occ.name; S.occPoints = cf.points; ensureCR(); commit();
+        W.custom = false; wizResetOcc(); renderWiz();
+      } }, 'Use this occupation')));
+  }
+  return { el: h('div', {}, h('h2', {}, 'Choose an occupation'),
+    h('p', { class: 'note' }, `Your occupation sets your Credit Rating range, your occupation skills and how many skill points you get. Your characteristics: ${STATK.map(k => `${k} ${S.stats[k]}`).join(' · ')}.`),
+    h('div', { class: 'row', style: 'margin:.6rem 0' },
+      h('button', { class: 'pri', onclick: () => openOccupations(() => { wizResetOcc(); renderWiz(); }) }, 'Choose a preset…'),
+      h('button', { onclick: () => { W.custom = !W.custom; renderWiz(); } }, W.custom ? 'Hide custom form' : 'Custom occupation')),
+    summary, custom),
+    valid: () => S.occ ? '' : 'Choose or create an occupation.' };
+}
+
+/* steps 5 & 6: spend skill points with steppers */
+function wizSkillStep(title, intro, list, field, total, cap, opts = {}) {
+  const spent = () => S.skills.reduce((a, s) => a + num(s[field]), 0);
+  const left = () => total() - spent();
+  const rows = list.map(s => {
+    const add = d => {
+      if (d > 0) d = Math.min(d, left(), Math.max(0, cap(s) - skillVal(s)));
+      else d = -Math.min(-d, num(s[field]));
+      if (!d) return;
+      s[field] = num(s[field]) + d; wupd();
+    };
+    // let the player name the specialisation right here
+    const nameEl = s.clone || /\(specify\)/i.test(s.name) ? nameInput(s) : h('span', {}, s.name);
+    const more = opts.onClone && isMulti(s) ? h('button', { class: 'sm', style: 'margin-top:.2rem', title: 'Take this skill again with another specialisation',
+      onclick: () => { opts.onClone(cloneSkill(s)); renderWiz(); } }, '+ another') : null;
+    const el = h('div', { class: 'wrow' },
+      h('div', {}, nameEl, h('small', { class: 'muted' }, wl(() => `base ${skillBase(s)} · +${num(s[field])} here`)), more),
+      h('b', { style: 'text-align:center;font-size:1.2rem' }, wl(() => skillVal(s))),
+      [-5, -1, 1, 5].map(d => h('button', { class: 'sm', onclick: () => add(d) }, (d > 0 ? '+' : '−') + Math.abs(d))));
+    return { el, s };
+  });
+  let search = null;
+  if (opts.search) {
+    search = h('input', { type: 'search', placeholder: 'Search skills…', style: 'margin:.4rem 0' });
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      rows.forEach(({ el, s }) => { el.hidden = !!q && !s.name.toLowerCase().includes(q); });
+    });
+  }
+  return h('div', {}, h('h2', {}, title), h('p', { class: 'note' }, intro),
+    h('div', { class: 'wpool' }, 'Points left: ', h('b', {}, wl(left)), ' of ', wl(total), opts.extra ? h('div', { style: 'font-size:.9rem' }, opts.extra) : null),
+    search, rows.map(r => r.el));
+}
+function stepOccSkills() {
+  ensureCR();
+  if (S.occ.opt) S.occPoints = fPoints(S.occ.opt);
+  const list = S.skills.filter(s => S.occ.ids.includes(s.id)).sort((a, b) => (isCR(b) - isCR(a)) || alpha(a, b));
+  const cr = findSkill('Credit Rating');
+  const cap = s => isCR(s) ? S.occ.cr[1] : isMythos(s) ? 0 : 75;
+  return { el: wizSkillStep('Occupation skills',
+    `Spend your occupation points on the skills of a ${S.occ.name}. No skill may go above 75, except Credit Rating (${S.occ.cr[0]}–${S.occ.cr[1]}).`,
+    list, 'occ', () => S.occPoints, cap,
+    { onClone: c => S.occ.ids.push(c.id), extra: h('span', {}, 'Credit Rating ', wl(() => cr ? skillVal(cr) : 0), ` (needs ${S.occ.cr[0]}–${S.occ.cr[1]})`) }),
+    valid: () => cr && (skillVal(cr) < S.occ.cr[0] || skillVal(cr) > S.occ.cr[1])
+      ? `Credit Rating must be ${S.occ.cr[0]}–${S.occ.cr[1]} (it is ${skillVal(cr)}).` : '' };
+}
+function stepPersonal() {
+  const list = S.skills.filter(s => !isCR(s) && !isMythos(s)).sort(alpha);
+  return { el: wizSkillStep('Personal interest skills',
+    'Spend INT × 2 points on any skills you like — hobbies, background, things your investigator is simply good at. Credit Rating and Cthulhu Mythos can’t be raised here, and no skill may go above 75.',
+    list, 'int', () => S.stats.INT * 2, () => 75, { search: true, onClone: () => {} }) };
+}
+
+/* a new occupation starts from scratch: points spent for the old one don't carry over */
+function wizResetOcc() {
+  S.skills.forEach(s => { s.occ = 0; });
+  W.q.vals = {}; W.q.extra = {};
+}
+
+/* ---- quick-fire skills ----
+   occupation skills + Credit Rating get fixed values 70, 60, 60, 50, 50, 50, 40, 40, 40 (replacing the base),
+   then four other skills get +20. */
+const QOCC = [70, 60, 60, 50, 50, 50, 40, 40, 40];
+function qApply() {
+  const q = W.q;
+  for (const s of S.skills) {
+    if (!S.occ.ids.includes(s.id)) { s.occ = 0; continue; }
+    const v = q.vals[s.id];
+    if (!v) { s.occ = 0; continue; }
+    const target = isCR(s) ? clamp(v, S.occ.cr[0], S.occ.cr[1]) : v;
+    s.occ = Math.max(0, target - skillBase(s)) + num(q.extra[s.id]); // never below the skill's own base
+  }
+  S.occPoints = S.skills.reduce((a, s) => a + num(s.occ), 0);
+}
+function stepQOccSkills() {
+  ensureCR();
+  const q = W.q;
+  const list = S.skills.filter(s => S.occ.ids.includes(s.id)).sort((a, b) => (isCR(b) - isCR(a)) || alpha(a, b));
+  const cr = list.find(isCR);
+  const remaining = () => {
+    const r = [...QOCC]; let over = 0;
+    for (const s of list) { const v = q.vals[s.id]; if (!v) continue; const i = r.indexOf(v); if (i >= 0) r.splice(i, 1); else over++; }
+    return { r, over };
+  };
+  // Credit Rating can't go outside the occupation's range; value above the range is redistributed, below is not allowed
+  const excess = () => cr && q.vals[cr.id] ? q.vals[cr.id] - clamp(q.vals[cr.id], S.occ.cr[0], S.occ.cr[1]) : 0;
+  const extraSpent = () => list.reduce((a, s) => a + num(q.extra[s.id]), 0);
+  const extraLeft = () => Math.max(0, excess()) - extraSpent();
+  const qUpd = () => { if (extraSpent() > Math.max(0, excess())) q.extra = {}; qApply(); wupd(); };
+
+  const rows = list.map(s => {
+    const sel = h('select', {}, h('option', { value: 0 }, '—'), ...[70, 60, 50, 40].map(v => h('option', { value: v }, v + '%')));
+    sel.value = q.vals[s.id] || 0;
+    sel.addEventListener('change', () => { q.vals[s.id] = +sel.value; qUpd(); });
+    const nameEl = s.clone || /\(specify\)/i.test(s.name) ? nameInput(s) : h('span', {}, s.name);
+    return h('div', { class: 'qrow' },
+      h('div', {}, nameEl, isCR(s) ? h('small', { class: 'muted' }, `must end up ${S.occ.cr[0]}–${S.occ.cr[1]}`) : null),
+      h('b', { style: 'text-align:center;font-size:1.2rem' }, wl(() => skillVal(s))), sel);
+  });
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const randomly = () => {
+    const vals = shuffle([...QOCC]).slice(0, list.length);
+    if (cr) { // give Credit Rating the value that fits its range best
+      const fit = [...vals].sort((a, b) => (a < S.occ.cr[0]) - (b < S.occ.cr[0]) || (a - clamp(a, ...S.occ.cr)) - (b - clamp(b, ...S.occ.cr)))[0];
+      vals.splice(vals.indexOf(fit), 1); q.vals[cr.id] = fit;
+    }
+    list.filter(s => !isCR(s)).forEach((s, i) => { q.vals[s.id] = vals[i]; });
+    q.extra = {}; qApply(); wupd(); renderWiz();
+  };
+  const exBlock = h('div', { class: 'card', style: 'margin-top:.8rem' },
+    h('h2', {}, 'Extra points'),
+    h('p', { class: 'note' }, wl(() => `Credit Rating tops out at ${S.occ.cr[1]}, so ${Math.max(0, excess())} points go to your other occupation skills. Left to place: ${extraLeft()}.`)),
+    list.filter(s => !isCR(s)).map(s => h('div', { class: 'wrow' },
+      h('div', {}, wl(() => s.name)), h('b', { style: 'text-align:center;font-size:1.2rem' }, wl(() => skillVal(s))),
+      [-5, -1, 1, 5].map(d => h('button', { class: 'sm', onclick: () => {
+        const x = num(q.extra[s.id]);
+        d = d > 0 ? Math.min(d, extraLeft(), Math.max(0, 75 - skillVal(s))) : -Math.min(-d, x);
+        if (!d) return;
+        q.extra[s.id] = x + d; qApply(); wupd();
+      } }, (d > 0 ? '+' : '−') + Math.abs(d))))));
+  W.calcs.push(() => { exBlock.hidden = excess() <= 0; });
+  qApply(); W.calcs.forEach(f => f());
+  return { el: h('div', {}, h('h2', {}, 'Occupation skills'),
+    h('p', { class: 'note' }, `Give your ${S.occ.name} skills and Credit Rating these values, one each: 70%, 60%, 60%, 50%, 50%, 50%, 40%, 40%, 40%. They replace the skills' base values.`),
+    h('div', { class: 'row', style: 'margin:.5rem 0' }, h('button', { onclick: randomly }, 'Assign randomly'),
+      h('span', {}, 'Left to assign: ', h('b', {}, wl(() => remaining().r.join('%, ') + (remaining().r.length ? '%' : 'none'))))),
+    rows, exBlock),
+    valid: () => {
+      if (list.length > 9) return `Quick-fire uses 8 occupation skills plus Credit Rating (you have ${list.length}).`;
+      if (list.some(s => !q.vals[s.id])) return 'Assign a value to every skill.';
+      if (remaining().over) return 'Each value can only be used as often as listed.';
+      if (excess() < 0) return `Credit Rating must be at least ${S.occ.cr[0]} — give it a higher value.`;
+      const left = extraLeft();
+      return left > 0 ? `Place ${left} more extra point${left > 1 ? 's' : ''} on your occupation skills.` : '';
+    } };
+}
+function stepQPersonal() {
+  const q = W.q;
+  const list = () => S.skills.filter(s => !S.occ.ids.includes(s.id) && !isCR(s) && !isMythos(s)).sort(alpha);
+  for (const id of [...q.pick]) if (!list().some(s => s.id === id)) q.pick.delete(id); // became an occupation skill
+  const apply = () => { S.skills.forEach(s => { s.int = q.pick.has(s.id) ? 20 : 0; }); wupd(); };
+  const rows = list().map(s => {
+    const cb = h('input', { type: 'checkbox', checked: q.pick.has(s.id) });
+    cb.addEventListener('change', () => {
+      if (cb.checked && q.pick.size >= 4) { cb.checked = false; return toast('Only four skills', 'Untick one first.'); }
+      cb.checked ? q.pick.add(s.id) : q.pick.delete(s.id); apply();
+    });
+    const editable = s.clone || /\(specify\)/i.test(s.name);
+    const more = isMulti(s) ? h('button', { class: 'sm', title: 'Add another specialisation', onclick: () => { cloneSkill(s); renderWiz(); } }, '+') : null;
+    return { s, el: h('div', { class: 'wrow', style: 'grid-template-columns:34px 1fr 50px 44px' }, cb,
+      h('div', {}, editable ? nameInput(s) : s.name), h('b', { style: 'text-align:center;font-size:1.2rem' }, wl(() => skillVal(s))), more || h('span')) };
+  });
+  const search = h('input', { type: 'search', placeholder: 'Search skills…', style: 'margin:.4rem 0' });
+  search.addEventListener('input', () => {
+    const t = search.value.trim().toLowerCase();
+    rows.forEach(({ el, s }) => { el.hidden = !!t && !s.name.toLowerCase().includes(t); });
+  });
+  apply();
+  return { el: h('div', {}, h('h2', {}, 'Personal interest skills'),
+    h('p', { class: 'note' }, 'Pick four skills that are not occupation skills; each gets +20 on top of its base value.'),
+    h('div', { class: 'wpool' }, 'Picked ', h('b', {}, wl(() => q.pick.size)), ' of 4'), search, rows.map(r => r.el)),
+    valid: () => q.pick.size < 4 ? `Pick ${4 - q.pick.size} more skill${4 - q.pick.size > 1 ? 's' : ''}.` : '' };
+}
+
+/* step 7: review */
+function stepReview() {
+  const sum = k => S.skills.reduce((a, s) => a + num(s[k]), 0);
+  const ul = S.occPoints - sum('occ'), up = S.stats.INT * 2 - sum('int');
+  const dodge = findSkill('Dodge');
+  const stat = (l, v) => h('div', { class: 'dv' }, h('small', {}, l), h('b', {}, v));
+  const warn = W.method === 'quick' ? [] : [ul > 0 ? `${ul} occupation point${ul > 1 ? 's' : ''} unspent` : '', up > 0 ? `${up} personal interest point${up > 1 ? 's' : ''} unspent` : ''].filter(Boolean);
+  const best = S.skills.filter(s => skillVal(s) > skillBase(s)).sort((a, b) => skillVal(b) - skillVal(a)).slice(0, 8);
+  return { el: h('div', {}, h('h2', {}, S.info.name || 'Unnamed investigator'),
+    h('p', { class: 'muted' }, [S.occ && S.occ.name, S.info.age ? `age ${S.info.age}` : '', S.info.residence].filter(Boolean).join(' · ')),
+    h('div', { class: 'derived' }, STATK.map(k => stat(k, S.stats[k]))),
+    h('div', { class: 'derived', style: 'margin-top:.6rem' },
+      stat('Hit Points', maxHP()), stat('Magic Points', maxMP()), stat('Sanity', Math.min(S.stats.POW, maxSAN())), stat('Luck', S.luckStart),
+      stat('Move', moveRate()), stat('Build', buildDb()[1]), stat('Damage Bonus', dmgBonus()), stat('Dodge', dodge ? skillVal(dodge) : half(S.stats.DEX))),
+    h('h2', { style: 'margin-top:1rem' }, 'Best skills'),
+    h('p', {}, best.map(s => `${s.name} ${skillVal(s)}`).join(' · ')),
+    warn.length ? h('p', { style: 'color:#e0a95a' }, '⚠ ' + warn.join(', ') + ' — go Back to spend them, or add them later from the Skills tab.') : null,
+    h('p', { class: 'note' }, 'You can still change anything from the sheet afterwards. Backstory, gear, weapons and a portrait are filled in there.')) };
+}
+
 /* ---------- portrait ---------- */
 function shrinkImage(file, max = 480) {
   return new Promise((res, rej) => {
@@ -605,7 +1094,7 @@ function tabSheet() {
     card('Investigator', h('div', { class: 'invwrap' }, portraitEl(), h('div', { class: 'grid', style: 'flex:1;min-width:260px' },
       fld('Name', 'info.name'), fld('Player', 'info.player'), fld('Occupation', 'info.occupation'),
       fld('Age', 'info.age', { type: 'number' }), fld('Sex', 'info.sex'), fld('Residence', 'info.residence'), fld('Birthplace', 'info.birthplace'))),
-      h('div', { class: 'row noprint', style: 'margin-top:.6rem' }, h('button', { onclick: openOccupations }, 'Occupation presets…'),
+      h('div', { class: 'row noprint', style: 'margin-top:.6rem' }, h('button', { onclick: () => openOccupations() }, 'Occupation presets…'),
         live(() => S.occ ? `Preset: ${S.occ.name} · Credit ${S.occ.cr[0]}–${S.occ.cr[1]}` : '')),
       h('p', { class: 'note' }, live(() => ageNote(num(S.info.age))))),
     card('Characteristics',
@@ -786,8 +1275,14 @@ const OCC = [
   { n: 'Soldier', cr: [9, 30], f: DS, s: ['Dodge', 'Fighting (Brawl)', 'Firearms (Rifle/Shotgun)', 'Stealth', 'Survival'], c: [['Climb', 'Swim'], SAFE, SAFE] },
 ];
 const parseF = f => f.split('|').map(o => o.split('+').map(t => { const [k, m] = t.split('*'); return [k, +m]; }));
-const fPoints = opt => opt.reduce((a, [k, m]) => a + num(S.stats[k]) * m, 0);
-const fText = opt => opt.map(([k, m]) => `${k}×${m}`).join(' + ');
+// opt is null for a custom occupation (points were typed in by hand)
+const fPoints = opt => opt ? opt.reduce((a, [k, m]) => a + num(S.stats[k]) * m, 0) : S.occPoints;
+const fText = opt => opt ? opt.map(([k, m]) => `${k}×${m}`).join(' + ') : 'custom';
+/* Credit Rating is always an occupation skill */
+function ensureCR() {
+  const cr = findSkill('Credit Rating');
+  if (S.occ && cr && !S.occ.ids.includes(cr.id)) S.occ.ids.push(cr.id);
+}
 
 /* find the sheet skill for a preset skill name, creating a specialisation if needed */
 function resolveSkill(name) {
@@ -805,7 +1300,7 @@ function resolveSkill(name) {
   return sk;
 }
 
-function openOccupations() {
+function openOccupations(done) { // done: optional callback, used by the creation wizard
   const dlg = $('#dlg');
   const q = h('input', { type: 'search', placeholder: 'Search occupations…' });
   const listEl = h('div', { style: 'max-height:50vh;overflow:auto;margin-top:.5rem' });
@@ -848,7 +1343,8 @@ function openOccupations() {
           S.info.occupation = o.n;
           S.occ = { name: o.n, cr: o.cr, opt: opts[fi], ids };
           S.occPoints = fPoints(opts[fi]);
-          commit(); dlg.close();
+          ensureCR(); commit(); dlg.close();
+          if (typeof done === 'function') return done();
           ui.tab = 'skills'; ui.edit = true; ui.occOnly = true; renderTab(); window.scrollTo(0, 0);
           toast(o.n, [`${S.occPoints} occupation points`, `Credit Rating ${o.cr[0]}–${o.cr[1]}`, `${ids.length} occupation skills (★) — spread your points`], 'warn');
         } }, 'Apply to character')));
@@ -1032,7 +1528,7 @@ function buildHeader() {
 function switchTo(S2, id) {
   persist(); S = S2; curId = id; persist(); fullRender();
 }
-function newSheet() { switchTo(blank(), uid()); ui.tab = 'sheet'; renderTab(); }
+function newSheet() { startWizard(); }
 function openLibrary() {
   persist();
   const dlg = $('#dlg');
