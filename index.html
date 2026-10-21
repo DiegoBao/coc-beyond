@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14161a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Cthulhu Investigator Sheet</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2314161a'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23c9a24a' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23c9a24a'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#14161a; --panel:#1d2026; --panel2:#262a32; --line:#343a45;
+  --text:#e8e4d8; --muted:#9a9a90; --accent:#c9a24a; --danger:#c0504d; --ok:#6aa56a; --blue:#6a8fc0;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding-bottom:env(safe-area-inset-bottom)}
+h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
+h2{font-size:1.05rem;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:.7rem}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:.5rem .8rem;min-height:44px;cursor:pointer;touch-action:manipulation}
+button:active{background:#323844}
+button.pri{background:var(--accent);color:#1a1405;border-color:var(--accent);font-weight:600}
+button.danger{color:#f08a87;border-color:#6b3533}
+button.sm{min-height:36px;padding:.25rem .6rem;font-size:.9rem}
+input,select,textarea{background:#12141a;border:1px solid var(--line);border-radius:8px;padding:.5rem .6rem;min-height:44px;width:100%}
+textarea{resize:vertical;min-height:90px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+input[type=checkbox]{width:24px;height:24px;min-height:0;accent-color:var(--accent)}
+input[type=number]{-moz-appearance:textfield}
+
+/* header */
+#hd{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:.5rem .75rem 0;
+  padding-top:max(.5rem,env(safe-area-inset-top))}
+.top{display:flex;align-items:center;gap:.75rem;justify-content:space-between;margin-bottom:.5rem}
+.who{display:flex;flex-direction:column;min-width:0}
+.who b{font-family:Georgia,serif;font-size:1.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who small{color:var(--muted)}
+.acts{display:flex;gap:.4rem}
+.vitals{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+.tile{display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tile .pm{border:0;border-radius:0;background:var(--panel2);width:44px;padding:0;font-size:1.5rem}
+.tmid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:.15rem 0}
+.tv{background:none;border:0;min-height:0;padding:0;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.tl{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tn{font-size:1.9rem;font-weight:700}
+.tn small{font-size:.9rem;font-weight:400;color:var(--muted)}
+.te{font-size:.7rem;color:var(--muted)}
+.tile.hp .tn{color:#e8837f}.tile.mp .tn{color:var(--blue)}.tile.san .tn{color:#b79be0}.tile.luck .tn{color:var(--accent)}
+.tile.low{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger) inset}
+.tabs{display:flex;gap:.25rem;margin-top:.5rem;overflow-x:auto;align-items:flex-end}
+.tab{border-radius:8px 8px 0 0;border-bottom:0;background:transparent;white-space:nowrap;color:var(--muted)}
+.tab.on{background:var(--panel);color:var(--accent);border-color:var(--line)}
+.seg{margin-left:auto;display:flex;align-items:center;gap:.25rem;padding-bottom:.3rem;flex:none}
+.seg span{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-right:.2rem}
+.seg button{min-height:36px;padding:.2rem .55rem;font-size:.85rem}
+.seg button.on{background:var(--accent);color:#1a1405;border-color:var(--accent)}
+
+main{padding:.75rem;max-width:1200px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:.9rem;margin-bottom:.75rem}
+.grid{display:grid;gap:.6rem;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.grid.w2{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.fld{display:flex;flex-direction:column;gap:.2rem}
+.fld>span{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.note{color:var(--muted);font-size:.9rem;margin:.5rem 0 0}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:.5rem;text-align:center}
+.stat .statname{width:100%;background:none;border:0;min-height:0;padding:0 0 .3rem;font-weight:700;letter-spacing:.1em;color:var(--accent)}
+.stat .statname small{display:block;font-weight:400;color:var(--muted);letter-spacing:0;font-size:.7rem}
+.stat input{text-align:center;font-size:1.5rem;font-weight:700}
+.stat .sub{margin-top:.3rem;color:var(--muted);font-size:.9rem}
+.derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem}
+.dv{background:var(--panel2);border-radius:var(--r);padding:.5rem;text-align:center}
+.dv small{display:block;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em}
+.dv b{font-size:1.4rem}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{display:flex;align-items:center;gap:.5rem;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:.4rem .9rem;min-height:44px;cursor:pointer;user-select:none}
+.chip.on{border-color:var(--danger);background:#3a2222}
+
+/* skills */
+.srow,.shead{display:grid;align-items:center;gap:.4rem;padding:.2rem .1rem;border-bottom:1px solid var(--line)}
+.srow{grid-template-columns:34px 1fr 56px 46px 46px}
+.srow[hidden]{display:none}
+.srow.edit,.shead{grid-template-columns:34px 1fr 68px 68px 68px 68px 52px 44px}
+.shead{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.shead.play{grid-template-columns:34px 1fr 56px 46px 46px}
+.sname{text-align:left;background:none;border:0;border-radius:6px;padding:.35rem .4rem;min-height:44px}
+.sname:active{background:var(--panel2)}
+.sval{font-size:1.25rem;text-align:center}
+.sh,.sf{text-align:center;color:var(--muted)}
+.srow.edit input{padding:.35rem .4rem;text-align:center}
+.srow.edit input.nm{text-align:left}
+.srow .tot{text-align:center;font-weight:700}
+.toolbar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.6rem}
+.toolbar input[type=search]{flex:1;min-width:160px}
+.pool{background:var(--panel2);border-radius:var(--r);padding:.5rem .8rem}
+.pool b.over{color:var(--danger)}
+
+/* combat */
+.weapon{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:.6rem;margin-bottom:.6rem}
+.weapon .grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+.weapon .wtop{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.6rem}
+.hit{font-size:1.2rem;font-weight:700}
+
+/* dice */
+.dice{display:flex;flex-wrap:wrap;gap:.5rem}
+.dice button{min-width:76px;min-height:60px;font-size:1.1rem}
+#log{margin:.75rem 0 0;padding:0;list-style:none}
+#log li{padding:.4rem 0;border-bottom:1px solid var(--line)}
+#log time{color:var(--muted);font-size:.8rem;margin-right:.5rem}
+
+/* toast & dialog */
+#toast{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;min-width:260px;max-width:92vw;
+  background:#0d0e11;border:2px solid var(--line);border-radius:14px;padding:.8rem 1.1rem;box-shadow:0 8px 30px #000a;display:none;text-align:center}
+#toast.show{display:block}
+#toast .tt{font-size:.85rem;color:var(--muted)}
+#toast .big{font-size:2.2rem;font-weight:800;line-height:1.1}
+#toast .lvl{font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+#toast .ln{font-size:.9rem;margin-top:.3rem}
+#toast.crit{border-color:#e6c75a}#toast.crit .lvl,#toast.crit .big{color:#e6c75a}
+#toast.extreme{border-color:#7fd17f}#toast.extreme .lvl,#toast.extreme .big{color:#7fd17f}
+#toast.hard{border-color:#6aa56a}#toast.hard .lvl,#toast.hard .big{color:#6aa56a}
+#toast.ok{border-color:#4f7f4f}#toast.ok .lvl,#toast.ok .big{color:#8bbd8b}
+#toast.fail{border-color:#7a3b39}#toast.fail .lvl,#toast.fail .big{color:#d98a87}
+#toast.fumble{border-color:#d33}#toast.fumble .lvl,#toast.fumble .big{color:#ff5a55}
+#toast.warn{border-color:var(--accent)}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:1rem;width:min(440px,94vw)}
+dialog::backdrop{background:#000a}
+dialog h2{margin-bottom:.5rem}
+dialog .big{font-size:1.5rem;text-align:center}
+dialog .btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin:.7rem 0}
+dialog hr{border:0;border-top:1px solid var(--line);margin:.8rem 0}
+
+.printtab{display:block}
+@media (max-width:640px){
+  .vitals{gap:.3rem}.tile .pm{width:34px}.tn{font-size:1.5rem}
+  .srow.edit,.shead{grid-template-columns:30px 1fr 52px 52px 52px 52px 44px 36px}
+}
+@media print{
+  :root{--bg:#fff;--panel:#fff;--panel2:#f3f3f3;--line:#999;--text:#000;--muted:#555;--accent:#000}
+  #hd .acts,#hd .tabs,#toast,.noprint,button.pm{display:none!important}
+  #hd{position:static}
+  .card{break-inside:avoid}
+  .printtab{break-before:page}.printtab:first-child{break-before:auto}
+  .tile .tn{color:#000!important}
+}
+
+/* portrait */
+.invwrap{display:flex;gap:.9rem;align-items:flex-start;flex-wrap:wrap}
+.pwrap{display:flex;flex-direction:column;gap:.4rem;align-items:center}
+.portrait{width:130px;height:174px;padding:0;overflow:hidden;border-style:dashed;color:var(--muted)}
+.portrait img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.av{width:42px;height:42px;flex:none;border-radius:50%;object-fit:cover;object-position:top;border:1px solid var(--line);background:var(--panel2)}
+.av[hidden]{display:none}
+/* printable sheet (hidden on screen) */
+#print .phead{display:flex;gap:12px;align-items:flex-start}
+#print .phead img{width:85px;height:113px;object-fit:cover;object-position:top;border:1px solid #000}
+#print{display:none;font:11px/1.3 system-ui,Arial,sans-serif;color:#000;background:#fff}
+#print h1{font:700 22px Georgia,serif;margin:0 0 4px;color:#000}
+#print h3{font:700 11px system-ui,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;border-bottom:1.5px solid #000;margin:10px 0 4px;padding-bottom:1px;color:#000}
+#print small{color:#444;font-size:9px}
+#print .pgrid{display:grid;gap:4px 12px}
+#print .info{grid-template-columns:repeat(3,1fr)}
+#print .two{grid-template-columns:1fr 1fr}
+#print .stats8{grid-template-columns:repeat(8,1fr);gap:4px}
+#print .box{border:1px solid #000;padding:2px 3px;text-align:center;break-inside:avoid}
+#print .box small{display:block}
+#print .sk{column-count:3;column-gap:18px}
+#print .sk>div{display:flex;gap:4px;border-bottom:1px dotted #888;break-inside:avoid;padding:1px 0}
+#print .sk .n{flex:1}
+#print .sk b{width:24px;text-align:right}
+#print .sk i{width:20px;text-align:right;font-style:normal;color:#555}
+#print table{width:100%;border-collapse:collapse}
+#print th,#print td{border:1px solid #000;padding:2px 4px;text-align:left;height:16px}
+#print .txt{white-space:pre-wrap;border:1px solid #888;min-height:32px;padding:3px;break-inside:avoid}
+@media print{
+  @page{margin:11mm}
+  html,body{background:#fff!important;color:#000!important;padding:0}
+  #hd,main,#toast,dialog{display:none!important}
+  #print{display:block}
+}
+</style>
+</head>
+<body>
+<header id="hd"></header>
+<main id="main"></main>
+<div id="print" aria-hidden="true"></div>
+<div id="toast" role="status" onclick="this.classList.remove('show')"></div>
+<dialog id="dlg"></dialog>
+<input type="file" id="filein" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+/* ============================================================
+   Call of Cthulhu 7e investigator sheet — single file, offline
+   ============================================================ */
+const KEY = 'coc7-current';
+const $ = (s, r = document) => r.querySelector(s);
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const num = v => Number(v) || 0;
+const half = v => Math.floor(v / 2);
+const fifth = v => Math.floor(v / 5);
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+/* ---------- tiny DOM helper ---------- */
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  let value;
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'value') value = v;
+    else if (k === 'checked') el.checked = true;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(Infinity)) {
+    if (c == null || c === false) continue;
+    el.append(c.nodeType ? c : document.createTextNode(c));
+  }
+  if (value !== undefined) el.value = value;
+  return el;
+}
+
+/* ---------- data ---------- */
+const SKILLS = [
+  ['Accounting', 5], ['Anthropology', 1], ['Appraise', 5], ['Archaeology', 1], ['Art/Craft (specify)', 5],
+  ['Charm', 15], ['Climb', 20], ['Credit Rating', 0], ['Cthulhu Mythos', 0], ['Disguise', 5],
+  ['Dodge', 'DEX/2'], ['Drive Auto', 20], ['Electrical Repair', 10], ['Fast Talk', 5],
+  ['Fighting (Brawl)', 25], ['Firearms (Handgun)', 20], ['Firearms (Rifle/Shotgun)', 25], ['Firearms (Submachine Gun)', 15],
+  ['First Aid', 30], ['History', 5], ['Intimidate', 15], ['Jump', 20], ['Language (Other)', 1], ['Language (Own)', 'EDU'],
+  ['Law', 5], ['Library Use', 20], ['Listen', 20], ['Locksmith', 1], ['Mechanical Repair', 10], ['Medicine', 1],
+  ['Natural World', 10], ['Navigate', 10], ['Occult', 5], ['Operate Heavy Machinery', 1], ['Persuade', 10],
+  ['Pilot (specify)', 1], ['Psychology', 10], ['Psychoanalysis', 1], ['Ride', 5], ['Science (specify)', 1],
+  ['Sleight of Hand', 10], ['Spot Hidden', 25], ['Stealth', 20], ['Survival (specify)', 10], ['Swim', 20],
+  ['Throw', 20], ['Track', 10],
+];
+const STAT_NAMES = { STR: 'Strength', CON: 'Constitution', SIZ: 'Size', DEX: 'Dexterity', APP: 'Appearance', INT: 'Intelligence', POW: 'Power', EDU: 'Education' };
+const STORY = [
+  ['description', 'Personal description'], ['ideology', 'Ideology / beliefs'], ['people', 'Significant people'],
+  ['places', 'Meaningful locations'], ['possessions', 'Treasured possessions'], ['traits', 'Traits'],
+  ['injuries', 'Injuries & scars'], ['phobias', 'Phobias & manias'], ['tomes', 'Arcane tomes, spells & artifacts'],
+  ['encounters', 'Encounters with strange entities'],
+];
+
+function blank() {
+  const skills = SKILLS.map(([name, base]) => ({ id: uid(), name, base, occ: 0, int: 0, other: 0, tick: false }));
+  const brawl = skills.find(s => s.name === 'Fighting (Brawl)');
+  return {
+    v: 1, creation: true,
+    info: { name: '', player: '', occupation: '', age: 25, sex: '', residence: '', birthplace: '' },
+    stats: { STR: 50, CON: 50, SIZ: 50, DEX: 50, APP: 50, INT: 50, POW: 50, EDU: 50 },
+    luckStart: 50,
+    cur: { hp: 10, mp: 10, san: 50, luck: 50 },
+    dayStart: 50,
+    status: { major: false, unconscious: false, dying: false, temp: false, indef: false },
+    portrait: '', occPoints: 0, occ: null,
+    skills,
+    weapons: [{ id: uid(), name: 'Unarmed', skill: brawl.id, damage: '1d3+db', range: 'Touch', atk: '1', ammo: '', malf: '' }],
+    story: Object.fromEntries(STORY.map(([k]) => [k, ''])),
+    gear: { cash: '', spending: '', assets: '', items: '' },
+    notes: '',
+  };
+}
+function merge(base, o) {
+  for (const k of Object.keys(o || {})) {
+    const a = base[k], b = o[k];
+    if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) merge(a, b);
+    else base[k] = b;
+  }
+  return base;
+}
+/* library: each character lives under its own localStorage key */
+const PFX = 'coc7-sheet-', CUR = 'coc7-current-id';
+let curId = null;
+function load() {
+  try {
+    const old = localStorage.getItem(KEY);
+    let id = localStorage.getItem(CUR);
+    if (old) { // migrate the single-sheet version
+      const nid = uid(); localStorage.setItem(PFX + nid, old); localStorage.removeItem(KEY);
+      if (!id || !localStorage.getItem(PFX + id)) id = nid;
+    }
+    const t = id && localStorage.getItem(PFX + id);
+    if (t) { curId = id; return merge(blank(), JSON.parse(t)); }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+function persist() {
+  S._saved = Date.now();
+  try { localStorage.setItem(PFX + curId, JSON.stringify(S)); localStorage.setItem(CUR, curId); } catch (e) { /* storage unavailable */ }
+}
+let saveTimer;
+function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(persist, 250); }
+function listSheets() {
+  const out = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k.startsWith(PFX)) continue;
+      try { const o = JSON.parse(localStorage.getItem(k)); out.push({ id: k.slice(PFX.length), name: o.info?.name || 'Unnamed Investigator', occ: o.info?.occupation || '', age: o.info?.age, img: o.portrait || '', t: o._saved || 0 }); } catch (e) { /* skip corrupt */ }
+    }
+  } catch (e) { /* ignore */ }
+  return out.sort((a, b) => b.t - a.t);
+}
+
+let S = load() || blank();
+if (!curId) curId = uid();
+const ui = { tab: 'sheet', mod: 0, edit: false, q: '', trained: false };
+let calcs = [], hcalcs = [];
+const rollLog = [];
+
+/* ---------- derived values ---------- */
+const getp = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
+const setp = (o, p, v) => { const ks = p.split('.'), l = ks.pop(); ks.reduce((a, k) => a[k], o)[l] = v; };
+function skillBase(s) {
+  if (s.base === 'DEX/2') return half(S.stats.DEX);
+  if (s.base === 'EDU') return S.stats.EDU;
+  return num(s.base);
+}
+const skillVal = s => skillBase(s) + num(s.occ) + num(s.int) + num(s.other);
+const findSkill = n => S.skills.find(s => s.name.toLowerCase().startsWith(n.toLowerCase()));
+const maxHP = () => Math.floor((S.stats.CON + S.stats.SIZ) / 10);
+const maxMP = () => fifth(S.stats.POW);
+const mythos = () => { const s = findSkill('Cthulhu Mythos'); return s ? skillVal(s) : 0; };
+const maxSAN = () => Math.max(0, 99 - mythos());
+function agePen(a) { return a >= 80 ? 5 : a >= 70 ? 4 : a >= 60 ? 3 : a >= 50 ? 2 : a >= 40 ? 1 : 0; }
+function moveRate() {
+  const { STR, DEX, SIZ } = S.stats;
+  const m = (STR > SIZ && DEX > SIZ) ? 9 : (STR < SIZ && DEX < SIZ) ? 7 : 8;
+  return Math.max(0, m - agePen(num(S.info.age)));
+}
+function buildDb() {
+  const t = S.stats.STR + S.stats.SIZ;
+  if (t <= 64) return ['-2', -2];
+  if (t <= 84) return ['-1', -1];
+  if (t <= 124) return ['0', 0];
+  if (t <= 164) return ['+1d4', 1];
+  if (t <= 204) return ['+1d6', 2];
+  if (t <= 284) return ['+2d6', 3];
+  if (t <= 364) return ['+3d6', 4];
+  if (t <= 444) return ['+4d6', 5];
+  return ['+5d6', 6];
+}
+const dmgBonus = () => buildDb()[0];
+function ageNote(a) {
+  if (a < 15) return 'Below the standard investigator age range (15+).';
+  if (a < 20) return 'Age 15–19: deduct 5 total from STR and SIZ, deduct 5 from EDU, roll Luck twice and keep the better.';
+  if (a < 40) return 'Age 20–39: 1 EDU improvement check.';
+  if (a < 50) return 'Age 40–49: 2 EDU checks; deduct 5 total from STR/CON/DEX; APP −5. Move −1 (applied automatically).';
+  if (a < 60) return 'Age 50–59: 3 EDU checks; deduct 10 total from STR/CON/DEX; APP −10. Move −2 (applied automatically).';
+  if (a < 70) return 'Age 60–69: 4 EDU checks; deduct 20 total from STR/CON/DEX; APP −15. Move −3 (applied automatically).';
+  if (a < 80) return 'Age 70–79: 4 EDU checks; deduct 40 total from STR/CON/DEX; APP −20. Move −4 (applied automatically).';
+  return 'Age 80–89: 4 EDU checks; deduct 80 total from STR/CON/DEX; APP −25. Move −5 (applied automatically).';
+}
+
+/* keep vitals inside legal ranges; in creation mode they follow the stats */
+function normalize() {
+  if (S.creation) {
+    S.cur.hp = maxHP(); S.cur.mp = maxMP();
+    S.cur.san = Math.min(S.stats.POW, maxSAN());
+    S.cur.luck = clamp(num(S.luckStart), 0, 99);
+    S.dayStart = S.cur.san;
+  }
+  S.cur.hp = clamp(S.cur.hp, 0, maxHP());
+  S.cur.mp = clamp(S.cur.mp, 0, maxMP());
+  S.cur.san = clamp(S.cur.san, 0, maxSAN());
+  S.cur.luck = clamp(S.cur.luck, 0, 99);
+}
+
+/* ---------- dice ---------- */
+const rnd = n => 1 + Math.floor(Math.random() * n);
+function d100(mod = 0) {
+  const units = Math.floor(Math.random() * 10);
+  const tens = Array.from({ length: 1 + Math.abs(mod) }, () => Math.floor(Math.random() * 10) * 10);
+  const results = tens.map(t => (t + units === 0 ? 100 : t + units));
+  const r = mod >= 0 ? Math.min(...results) : Math.max(...results);
+  return { r, results };
+}
+function judge(r, target) {
+  if (r === 1) return { lvl: 'Critical success', cls: 'crit' };
+  if (target < 50 ? r >= 96 : r === 100) return { lvl: 'Fumble', cls: 'fumble' };
+  if (r <= fifth(target)) return { lvl: 'Extreme success', cls: 'extreme' };
+  if (r <= half(target)) return { lvl: 'Hard success', cls: 'hard' };
+  if (r <= target) return { lvl: 'Success', cls: 'ok' };
+  return { lvl: 'Failure', cls: 'fail' };
+}
+function rollExpr(expr) {
+  const s = String(expr).replace(/\s+/g, '').replace(/db/gi, dmgBonus()).replace(/\+\+/g, '+').replace(/\+-/g, '-').replace(/--/g, '+');
+  const parts = s.match(/[+-]?[^+-]+/g);
+  if (!parts) return null;
+  let total = 0; const detail = [];
+  for (const p of parts) {
+    const sign = p[0] === '-' ? -1 : 1, t = p.replace(/^[+-]/, '');
+    const m = t.match(/^(\d*)d(\d+)$/i);
+    if (m) {
+      const c = Math.min(+m[1] || 1, 100), sd = +m[2];
+      if (!sd) return null;
+      const rs = Array.from({ length: c }, () => rnd(sd));
+      total += sign * rs.reduce((a, b) => a + b, 0);
+      detail.push((sign < 0 ? '−' : detail.length ? '+' : '') + `${c}d${sd}[${rs.join(',')}]`);
+    } else if (/^\d+$/.test(t)) {
+      total += sign * +t; detail.push((sign < 0 ? '−' : detail.length ? '+' : '') + t);
+    } else return null;
+  }
+  return { total, detail: detail.join(' ') };
+}
+const modLabel = () => ui.mod === 0 ? '' : ui.mod > 0 ? ` (${ui.mod} bonus)` : ` (${-ui.mod} penalty)`;
+
+function rollCheck(name, target) {
+  const { r, results } = d100(ui.mod);
+  const j = judge(r, target);
+  const extra = ui.mod ? `Dice: ${results.join(' / ')}${modLabel()}` : '';
+  logRoll(`${name} (${target}): ${r} — ${j.lvl}`);
+  toast(`${name} · ${target}  (½ ${half(target)} · ⅕ ${fifth(target)})`, [r, j.lvl], j.cls, extra);
+}
+
+/* ---------- toast / log ---------- */
+let toastTimer;
+function toast(title, body, cls = 'warn', extra = '', ms = 7000) {
+  const t = $('#toast');
+  t.className = 'show ' + cls;
+  t.replaceChildren(h('div', { class: 'tt' }, title));
+  if (Array.isArray(body) && cls !== 'warn') {
+    t.append(h('div', { class: 'big' }, body[0]), h('div', { class: 'lvl' }, body[1]));
+  } else {
+    for (const l of [].concat(body || [])) t.append(h('div', { class: 'ln' }, l));
+  }
+  if (extra) t.append(h('div', { class: 'ln muted' }, extra));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+function logRoll(text) {
+  rollLog.unshift({ t: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text });
+  if (rollLog.length > 60) rollLog.pop();
+  updateLog();
+}
+function updateLog() {
+  const el = document.getElementById('log');
+  if (el) el.replaceChildren(...rollLog.map(l => h('li', {}, h('time', {}, l.t), l.text)));
+}
+
+/* ---------- reactive helpers ---------- */
+function live(fn, reg = calcs) {
+  const s = document.createElement('span');
+  const f = () => { const v = String(fn()); if (s.textContent !== v) s.textContent = v; };
+  reg.push(f); f();
+  return s;
+}
+function refresh() { normalize(); hcalcs.forEach(f => f()); calcs.forEach(f => f()); }
+function commit() { refresh(); saveSoon(); }
+
+function fld(label, path, o = {}) {
+  const el = h(o.area ? 'textarea' : 'input', {
+    type: o.area ? null : (o.type || 'text'), rows: o.rows, placeholder: o.ph, value: getp(S, path) ?? '',
+    inputmode: o.type === 'number' ? 'numeric' : null,
+  });
+  el.addEventListener('input', () => { setp(S, path, o.type === 'number' ? num(el.value) : el.value); commit(); });
+  return h('label', { class: 'fld ' + (o.cls || '') }, h('span', {}, label), el);
+}
+const card = (title, ...kids) => h('section', { class: 'card' }, title ? h('h2', {}, title) : null, ...kids);
+
+/* ---------- vitals ---------- */
+const MAXES = { hp: maxHP, mp: maxMP, san: maxSAN, luck: () => 99 };
+function applyDelta(kind, d, detail) {
+  const before = S.cur[kind];
+  S.cur[kind] = clamp(before + d, 0, MAXES[kind]());
+  const real = S.cur[kind] - before, warns = [];
+  if (kind === 'hp' && real < 0) {
+    if (-real * 2 >= maxHP()) { S.status.major = true; warns.push(`Major wound (${-real} damage ≥ half max HP). CON roll or fall unconscious.`); }
+    if (S.cur.hp === 0) {
+      if (S.status.major) { S.status.dying = true; warns.push('0 HP with a major wound: DYING. First Aid, then Medicine.'); }
+      else { S.status.unconscious = true; warns.push('0 HP: unconscious.'); }
+    }
+  }
+  if (kind === 'mp' && S.cur.mp === 0 && real < 0) warns.push('0 MP: unconscious.');
+  if (kind === 'san' && real < 0) {
+    if (-real >= 5) warns.push(`Lost ${-real} SAN in one go: INT roll — success means temporary insanity.`);
+    if (S.dayStart - S.cur.san >= Math.max(1, fifth(S.dayStart))) warns.push('Day limit reached (≥ ⅕ of SAN lost today): indefinite insanity.');
+    if (S.cur.san === 0) warns.push('SAN 0: permanently insane.');
+  }
+  commit();
+  if (detail || warns.length) {
+    const nm = { hp: 'HP', mp: 'MP', san: 'SAN', luck: 'Luck' }[kind];
+    toast(`${nm} ${real >= 0 ? '+' : '−'}${Math.abs(real)}${detail ? '  ' + detail : ''}`, [`Now ${S.cur[kind]}`, ...warns], 'warn');
+  }
+  if (ui.tab === 'sheet') renderTab();
+}
+
+function tile(kind, label) {
+  const mid = h('button', { class: 'tv', onclick: () => openAdjust(kind), title: 'Tap to adjust' },
+    h('span', { class: 'tl' }, label),
+    h('span', { class: 'tn' }, live(() => S.cur[kind], hcalcs), kind === 'luck' ? null : h('small', {}, ' / ', live(() => MAXES[kind](), hcalcs))));
+  const extra = kind === 'san' ? h('div', { class: 'te' }, live(() => {
+    const d = S.cur.san - S.dayStart; return `today ${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(d)} · limit ${fifth(S.dayStart)}`;
+  }, hcalcs)) : null;
+  const el = h('div', { class: 'tile ' + kind },
+    h('button', { class: 'pm', onclick: () => applyDelta(kind, -1) }, '−'),
+    h('div', { class: 'tmid' }, mid, extra),
+    h('button', { class: 'pm', onclick: () => applyDelta(kind, 1) }, '+'));
+  hcalcs.push(() => el.classList.toggle('low', kind !== 'luck' && S.cur[kind] <= MAXES[kind]() / 4 && MAXES[kind]() > 0));
+  return el;
+}
+
+function openAdjust(kind) {
+  const dlg = $('#dlg');
+  const name = { hp: 'Hit Points', mp: 'Magic Points', san: 'Sanity', luck: 'Luck' }[kind];
+  const amt = h('input', { type: 'text', class: 'big', placeholder: 'e.g. 3 or 1d6', autocomplete: 'off', inputmode: 'text' });
+  const amount = () => {
+    const r = amt.value.trim() ? rollExpr(amt.value) : null;
+    if (!r) { toast('Enter a number or dice', 'e.g. 3, 1d6, 2d4+1'); return null; }
+    return r;
+  };
+  const delta = sign => { const r = amount(); if (!r) return; dlg.close(); applyDelta(kind, sign * Math.abs(r.total), r.detail); };
+  const kids = [
+    h('h2', {}, name),
+    h('div', { class: 'big' }, `${S.cur[kind]}`, kind === 'luck' ? '' : h('small', { class: 'muted' }, ` / ${MAXES[kind]()}`)),
+    h('div', { style: 'height:.6rem' }), amt,
+    h('div', { class: 'btns' },
+      h('button', { class: 'danger', onclick: () => delta(-1) }, kind === 'hp' ? 'Damage' : '− Lose'),
+      h('button', { onclick: () => delta(1) }, kind === 'hp' ? 'Heal' : '+ Gain'),
+      h('button', { onclick: () => { const v = num(amt.value); dlg.close(); S.creation = false; S.cur[kind] = v; commit(); renderTab(); } }, 'Set to')),
+  ];
+  if (kind === 'san') {
+    const ok = h('input', { value: '0', 'aria-label': 'Loss on success' }), bad = h('input', { value: '1d4', 'aria-label': 'Loss on failure' });
+    kids.push(h('hr'), h('div', { class: 'muted' }, 'Sanity roll — loss on success / failure'),
+      h('div', { class: 'row' }, h('div', { style: 'flex:1' }, ok), '/', h('div', { style: 'flex:1' }, bad)),
+      h('div', { style: 'height:.5rem' }),
+      h('button', { class: 'pri', style: 'width:100%', onclick: () => {
+        const { r } = d100(ui.mod), pass = r <= S.cur.san;
+        const loss = rollExpr(pass ? ok.value : bad.value) || { total: 0, detail: '' };
+        dlg.close();
+        logRoll(`Sanity (${S.cur.san}): ${r} — ${pass ? 'passed' : 'failed'}, lost ${loss.total}`);
+        applyDelta('san', -Math.abs(loss.total), `Rolled ${r} vs ${S.cur.san} — ${pass ? 'passed' : 'FAILED'}  ${loss.detail}`);
+      } }, 'Roll Sanity'),
+      h('div', { style: 'height:.5rem' }),
+      h('button', { style: 'width:100%', onclick: () => { S.dayStart = S.cur.san; commit(); dlg.close(); toast('New day', `Day-start Sanity set to ${S.dayStart}`); } }, 'Start a new day (reset daily limit)'));
+  }
+  if (kind === 'luck') {
+    kids.push(h('hr'), h('button', { class: 'pri', style: 'width:100%', onclick: () => { dlg.close(); rollCheck('Luck', S.cur.luck); } }, 'Roll Luck'));
+  }
+  kids.push(h('hr'), h('button', { style: 'width:100%', onclick: () => dlg.close() }, 'Close'));
+  dlg.replaceChildren(...kids);
+  dlg.showModal();
+  amt.focus();
+}
+
+/* ---------- tabs ---------- */
+/* ---------- portrait ---------- */
+function shrinkImage(file, max = 480) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); // flatten transparency
+      g.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Unsupported image')); };
+    img.src = url;
+  });
+}
+function portraitEl() {
+  const file = h('input', { type: 'file', accept: 'image/*', hidden: true });
+  file.addEventListener('change', async () => {
+    const f = file.files[0]; if (!f) return;
+    try { S.portrait = await shrinkImage(f); commit(); renderTab(); }
+    catch (e) { toast('Could not load image', String(e.message || e)); }
+  });
+  return h('div', { class: 'pwrap' },
+    h('button', { class: 'portrait', title: 'Tap to choose a portrait', onclick: () => file.click() },
+      S.portrait ? h('img', { src: S.portrait, alt: 'Portrait' }) : h('span', {}, '+ Portrait')),
+    file,
+    S.portrait ? h('button', { class: 'sm danger noprint', onclick: () => { S.portrait = ''; commit(); renderTab(); } }, 'Remove') : null);
+}
+function avatar() {
+  const av = h('img', { class: 'av', alt: '' });
+  hcalcs.push(() => { av.hidden = !S.portrait; if (S.portrait && av.getAttribute('src') !== S.portrait) av.src = S.portrait; });
+  return av;
+}
+
+function tabSheet() {
+  const wrap = h('div', {});
+  const stats = h('div', { class: 'stats' }, Object.keys(STAT_NAMES).map(k => {
+    const inp = h('input', { type: 'number', inputmode: 'numeric', value: S.stats[k], min: 0 });
+    inp.addEventListener('input', () => { S.stats[k] = num(inp.value); commit(); });
+    return h('div', { class: 'stat' },
+      h('button', { class: 'statname', onclick: () => rollCheck(STAT_NAMES[k], S.stats[k]) }, k, h('small', {}, STAT_NAMES[k] + ' · tap to roll')),
+      inp, h('div', { class: 'sub' }, live(() => half(S.stats[k])), ' · ', live(() => fifth(S.stats[k]))));
+  }));
+  const luckIn = h('input', { type: 'number', inputmode: 'numeric', value: S.luckStart });
+  luckIn.addEventListener('input', () => { S.luckStart = num(luckIn.value); commit(); });
+
+  wrap.append(
+    card('Investigator', h('div', { class: 'invwrap' }, portraitEl(), h('div', { class: 'grid', style: 'flex:1;min-width:260px' },
+      fld('Name', 'info.name'), fld('Player', 'info.player'), fld('Occupation', 'info.occupation'),
+      fld('Age', 'info.age', { type: 'number' }), fld('Sex', 'info.sex'), fld('Residence', 'info.residence'), fld('Birthplace', 'info.birthplace'))),
+      h('div', { class: 'row noprint', style: 'margin-top:.6rem' }, h('button', { onclick: openOccupations }, 'Occupation presets…'),
+        live(() => S.occ ? `Preset: ${S.occ.name} · Credit ${S.occ.cr[0]}–${S.occ.cr[1]}` : '')),
+      h('p', { class: 'note' }, live(() => ageNote(num(S.info.age))))),
+    card('Characteristics',
+      stats,
+      h('p', { class: 'note' }, 'Shown below each value: half · fifth. Values are normally 15–90.'),
+      h('div', { class: 'row noprint', style: 'margin-top:.6rem' },
+        h('button', { onclick: rollAllStats }, 'Roll characteristics (3d6×5 / (2d6+6)×5)'),
+        h('label', { class: 'row' }, 'Starting Luck', h('div', { style: 'width:90px' }, luckIn)),
+        h('button', { onclick: () => { luckIn.value = (rnd(6) + rnd(6) + rnd(6)) * 5; luckIn.dispatchEvent(new Event('input')); } }, 'Roll Luck'),
+        h('label', { class: 'chip' + (S.creation ? ' on' : ''), style: S.creation ? 'border-color:var(--accent);background:#3a3220' : '' },
+          h('input', { type: 'checkbox', checked: S.creation, onchange: e => { S.creation = e.target.checked; commit(); renderTab(); } }),
+          'Creation mode (HP / MP / SAN / Luck follow the stats)'))),
+    card('Derived',
+      h('div', { class: 'derived' },
+        dv('Hit Points', () => maxHP()), dv('Magic Points', () => maxMP()),
+        dv('Starting SAN', () => S.stats.POW), dv('Max SAN', () => maxSAN()),
+        dv('Move', () => moveRate()), dv('Build', () => buildDb()[1]), dv('Damage Bonus', () => dmgBonus()),
+        dv('Dodge', () => { const s = findSkill('Dodge'); return s ? skillVal(s) : half(S.stats.DEX); }),
+        dv('Idea (INT)', () => S.stats.INT), dv('Know (EDU)', () => S.stats.EDU))),
+    card('Conditions', h('div', { class: 'chips' }, [
+      ['major', 'Major wound'], ['unconscious', 'Unconscious'], ['dying', 'Dying'], ['temp', 'Temporary insanity'], ['indef', 'Indefinite insanity'],
+    ].map(([k, label]) => {
+      const cb = h('input', { type: 'checkbox', checked: S.status[k] });
+      const chip = h('label', { class: 'chip' + (S.status[k] ? ' on' : '') }, cb, label);
+      cb.addEventListener('change', () => { S.status[k] = cb.checked; chip.classList.toggle('on', cb.checked); commit(); });
+      return chip;
+    }))));
+  return wrap;
+}
+const dv = (label, fn) => h('div', { class: 'dv' }, h('small', {}, label), h('b', {}, live(fn)));
+function rollAllStats() {
+  if (!S.creation && !confirm('Overwrite all characteristics with random rolls?')) return;
+  const r3 = () => (rnd(6) + rnd(6) + rnd(6)) * 5, r2 = () => (rnd(6) + rnd(6) + 6) * 5;
+  Object.assign(S.stats, { STR: r3(), CON: r3(), DEX: r3(), APP: r3(), POW: r3(), SIZ: r2(), INT: r2(), EDU: r2() });
+  S.luckStart = r3();
+  commit(); renderTab();
+}
+
+function tabSkills() {
+  const wrap = h('div', {});
+  const rows = [];
+  let addBtn = null;
+  const applyFilter = () => {
+    const q = ui.q.trim().toLowerCase();
+    const occOn = !!(ui.occOnly && S.occ); // the flag can outlive the character it was set for
+    for (const { el, s } of rows) el.hidden = !((!q || s.name.toLowerCase().includes(q)) && (!ui.trained || skillVal(s) > skillBase(s) || s.tick) && (!occOn || S.occ.ids.includes(s.id)));
+    if (addBtn) { // a new skill is never an occupation skill, so it would be hidden by this filter
+      addBtn.disabled = occOn;
+      addBtn.textContent = occOn ? '+ Add skill (turn off “★ Occupation only” first)' : '+ Add skill';
+    }
+  };
+  const search = h('input', { type: 'search', placeholder: 'Search skills…', value: ui.q });
+  search.addEventListener('input', () => { ui.q = search.value; applyFilter(); });
+  const occOnly = h('input', { type: 'checkbox', checked: ui.occOnly });
+  occOnly.addEventListener('change', () => { ui.occOnly = occOnly.checked; applyFilter(); });
+  const trained = h('input', { type: 'checkbox', checked: ui.trained });
+  trained.addEventListener('change', () => { ui.trained = trained.checked; applyFilter(); });
+
+  wrap.append(h('div', { class: 'toolbar' }, search,
+    h('label', { class: 'row' }, trained, 'Trained only'),
+    S.occ ? h('label', { class: 'row' }, occOnly, '★ Occupation only') : null,
+    h('button', { class: ui.edit ? 'pri' : '', onclick: () => {
+      if (ui.edit) { S.skills.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })); commit(); }
+      ui.edit = !ui.edit; renderTab();
+    } }, ui.edit ? 'Done editing' : 'Edit skills'),
+    ui.edit ? null : h('button', { onclick: improvementPhase }, 'Improvement phase')));
+
+  if (ui.edit) {
+    const occ = h('input', { type: 'number', inputmode: 'numeric', value: S.occPoints, style: 'width:100px' });
+    occ.addEventListener('input', () => { S.occPoints = num(occ.value); commit(); });
+    const sum = k => S.skills.reduce((a, s) => a + num(s[k]), 0);
+    wrap.append(h('div', { class: 'grid w2', style: 'margin-bottom:.6rem' },
+      h('div', { class: 'pool' }, h('div', { class: 'row' }, 'Occupation points', occ),
+        h('div', {}, 'Spent ', live(() => sum('occ')), ' · remaining ', h('b', {}, live(() => S.occPoints - sum('occ'))))),
+      h('div', { class: 'pool' }, h('div', {}, 'Personal interest points = INT × 2 = ', h('b', {}, live(() => S.stats.INT * 2))),
+        h('div', {}, 'Spent ', live(() => sum('int')), ' · remaining ', h('b', {}, live(() => S.stats.INT * 2 - sum('int')))))));
+    if (S.occ) {
+      const cr = findSkill('Credit Rating');
+      wrap.append(h('div', { class: 'pool', style: 'margin-bottom:.6rem' },
+        h('div', {}, h('b', {}, S.occ.name), ' — ', fText(S.occ.opt), ' = ', live(() => fPoints(S.occ.opt)), ' ',
+          h('button', { class: 'sm', onclick: () => { S.occPoints = fPoints(S.occ.opt); commit(); renderTab(); } }, 'Use this total')),
+        h('div', {}, 'Credit Rating ', live(() => cr ? skillVal(cr) : 0), ` (allowed ${S.occ.cr[0]}–${S.occ.cr[1]}) `,
+          live(() => cr && (skillVal(cr) < S.occ.cr[0] || skillVal(cr) > S.occ.cr[1]) ? '⚠ out of range' : '')),
+        h('div', { class: 'muted' }, '★ marks occupation skills — only these may take occupation points.')));
+    }
+    wrap.append(h('p', { class: 'note' }, 'Occupation points come from your occupation’s formula (e.g. EDU×4). “Other” is for improvement-phase gains and GM awards.'));
+  }
+
+  const list = h('div', {});
+  list.append(ui.edit
+    ? h('div', { class: 'shead' }, h('span', {}, 'Used'), h('span', {}, 'Skill'), h('span', {}, 'Base'), h('span', {}, 'Occ'), h('span', {}, 'Int'), h('span', {}, 'Other'), h('span', {}, 'Total'), h('span', {}))
+    : h('div', { class: 'shead play' }, h('span', {}, 'Used'), h('span', {}, 'Skill (tap to roll)'), h('span', { style: 'text-align:center' }, '%'), h('span', {}, '½'), h('span', {}, '⅕')));
+
+  S.skills.forEach((s, i) => {
+    const tick = h('input', { type: 'checkbox', checked: s.tick, title: 'Mark as used successfully (for the improvement phase)' });
+    tick.addEventListener('change', () => { s.tick = tick.checked; commit(); });
+    let el;
+    if (!ui.edit) {
+      el = h('div', { class: 'srow' }, tick,
+        h('button', { class: 'sname', onclick: () => rollCheck(s.name, skillVal(s)) }, s.name),
+        h('b', { class: 'sval' }, live(() => skillVal(s))),
+        h('span', { class: 'sh' }, live(() => half(skillVal(s)))),
+        h('span', { class: 'sf' }, live(() => fifth(skillVal(s)))));
+    } else {
+      const n = (k) => { const e = h('input', { type: 'number', inputmode: 'numeric', value: s[k] }); e.addEventListener('input', () => { s[k] = num(e.value); commit(); }); return e; };
+      const nm = h('input', { class: 'nm', value: s.name });
+      nm.addEventListener('input', () => { s.name = nm.value; saveSoon(); });
+      const baseCell = typeof s.base === 'number' || /^\d+$/.test(s.base) ? n('base') : h('span', { class: 'muted', style: 'text-align:center' }, s.base);
+      el = h('div', { class: 'srow edit' }, tick,
+        h('div', { class: 'row', style: 'flex-wrap:nowrap;gap:.25rem' }, S.occ && S.occ.ids.includes(s.id) ? h('span', { style: 'color:var(--accent)', title: 'Occupation skill' }, '★') : null, nm), baseCell, n('occ'), n('int'), n('other'),
+        h('b', { class: 'tot' }, live(() => skillVal(s))),
+        h('button', { class: 'danger sm', title: 'Delete skill', onclick: () => { if (confirm(`Delete "${s.name}"?`)) { S.skills.splice(i, 1); commit(); renderTab(); } } }, '×'));
+    }
+    rows.push({ el, s });
+    list.append(el);
+  });
+  wrap.append(card(null, list));
+  if (ui.edit) {
+    addBtn = h('button', { onclick: () => { S.skills.push({ id: uid(), name: 'New skill', base: 1, occ: 0, int: 0, other: 0, tick: false }); commit(); renderTab(); } }, '+ Add skill');
+    wrap.append(addBtn);
+  }
+  applyFilter();
+  return wrap;
+}
+
+function improvementPhase() {
+  const ticked = S.skills.filter(s => s.tick && !/^(credit rating|cthulhu mythos)/i.test(s.name));
+  if (!ticked.length) return toast('Nothing to improve', 'Tick the skills you used successfully first.');
+  if (!confirm(`Run the improvement phase for ${ticked.length} ticked skill(s)?`)) return;
+  const out = [];
+  for (const s of ticked) {
+    const before = skillVal(s), { r } = d100(0);
+    if (r > before || r > 95) {
+      const gain = rnd(10); s.other = num(s.other) + gain;
+      out.push(`${s.name}: rolled ${r} vs ${before} — +${gain} → ${skillVal(s)}` + (before < 90 && skillVal(s) >= 90 ? '  (reached 90+: regain 2d6 SAN)' : ''));
+    } else out.push(`${s.name}: rolled ${r} vs ${before} — no change`);
+  }
+  S.skills.forEach(s => { s.tick = false; });
+  commit(); renderTab();
+  logRoll('Improvement phase: ' + out.join('; '));
+  const dlg = $('#dlg');
+  dlg.replaceChildren(h('h2', {}, 'Improvement phase'), h('ul', {}, out.map(o => h('li', {}, o))), h('button', { class: 'pri', style: 'width:100%', onclick: () => dlg.close() }, 'OK'));
+  dlg.showModal();
+}
+
+/* ---------- occupation presets ----------
+   n=name, cr=[min,max] Credit Rating, f=skill-point formula ('|' = choose one),
+   s=fixed skills, c=choice slots (array = pick one of, '*' = any skill) */
+const IP = ['Charm', 'Fast Talk', 'Intimidate', 'Persuade'];
+const SAFE = ['First Aid', 'Mechanical Repair', 'Language (Other)'];
+const FIRE = ['Firearms (Handgun)', 'Firearms (Rifle/Shotgun)'];
+const CRIM = ['Fighting (Brawl)', ...FIRE, 'Locksmith', 'Mechanical Repair', 'Sleight of Hand'];
+const DS = 'EDU*2+DEX*2|EDU*2+STR*2';
+const OCC = [
+  { n: 'Accountant', cr: [30, 70], f: 'EDU*4', s: ['Accounting', 'Law', 'Library Use', 'Listen', 'Persuade', 'Spot Hidden'], c: ['*', '*'] },
+  { n: 'Antiquarian', cr: [30, 70], f: 'EDU*4', s: ['Appraise', 'Art/Craft', 'History', 'Library Use', 'Language (Other)', 'Spot Hidden'], c: [IP, '*'] },
+  { n: 'Artist', cr: [9, 50], f: 'EDU*2+DEX*2|EDU*2+POW*2', s: ['Art/Craft', 'Psychology', 'Spot Hidden', 'Language (Other)'], c: [['History', 'Natural World'], IP, '*', '*'] },
+  { n: 'Athlete', cr: [9, 70], f: DS, s: ['Climb', 'Jump', 'Fighting (Brawl)', 'Ride', 'Swim', 'Throw'], c: [IP, '*'] },
+  { n: 'Author', cr: [9, 30], f: 'EDU*4', s: ['Art/Craft (Literature)', 'History', 'Library Use', 'Language (Own)', 'Language (Other)', 'Psychology'], c: [['Natural World', 'Occult'], '*'] },
+  { n: 'Clergy', cr: [9, 60], f: 'EDU*4', s: ['Accounting', 'History', 'Library Use', 'Listen', 'Psychology', 'Language (Other)'], c: [IP, '*'] },
+  { n: 'Criminal', cr: [5, 65], f: DS, s: ['Appraise', 'Psychology', 'Spot Hidden', 'Stealth'], c: [['Art/Craft (Acting)', 'Disguise'], IP, CRIM, CRIM] },
+  { n: 'Dilettante', cr: [50, 99], f: 'EDU*2+APP*2', s: ['Art/Craft', 'Language (Other)', 'Ride'], c: [FIRE, '*', '*', '*', '*'] },
+  { n: 'Doctor of Medicine', cr: [30, 80], f: 'EDU*4', s: ['First Aid', 'Language (Other)', 'Medicine', 'Psychology', 'Science (Biology)', 'Science (Pharmacy)'], c: ['*', '*'] },
+  { n: 'Engineer', cr: [30, 60], f: 'EDU*4', s: ['Art/Craft (Technical Drawing)', 'Electrical Repair', 'Library Use', 'Mechanical Repair', 'Operate Heavy Machinery', 'Science (Engineering)', 'Science (Physics)'], c: ['*'] },
+  { n: 'Entertainer', cr: [9, 70], f: 'EDU*2+APP*2', s: ['Art/Craft (Acting)', 'Disguise', 'Listen', 'Psychology'], c: [IP, IP, '*', '*'] },
+  { n: 'Federal Agent', cr: [20, 40], f: 'EDU*4', s: ['Drive Auto', 'Fighting (Brawl)', 'Firearms (Handgun)', 'Law', 'Persuade', 'Stealth', 'Spot Hidden'], c: ['*'] },
+  { n: 'Journalist', cr: [9, 30], f: 'EDU*4', s: ['Art/Craft (Photography)', 'History', 'Library Use', 'Language (Own)', 'Psychology'], c: [IP, IP, '*'] },
+  { n: 'Lawyer', cr: [30, 80], f: 'EDU*4', s: ['Accounting', 'Law', 'Library Use', 'Listen', 'Persuade', 'Psychology'], c: [IP, '*'] },
+  { n: 'Librarian', cr: [9, 35], f: 'EDU*4', s: ['Accounting', 'Library Use', 'Language (Own)', 'Language (Other)'], c: ['*', '*', '*', '*'] },
+  { n: 'Musician', cr: [9, 30], f: 'EDU*2+DEX*2|EDU*2+POW*2', s: ['Art/Craft (Instrument)', 'Listen', 'Psychology'], c: [IP, '*', '*', '*', '*'] },
+  { n: 'Nurse', cr: [9, 30], f: 'EDU*4', s: ['First Aid', 'Listen', 'Medicine', 'Psychology', 'Science (Biology)', 'Science (Chemistry)', 'Spot Hidden'], c: [IP] },
+  { n: 'Parapsychologist', cr: [9, 30], f: 'EDU*4', s: ['Anthropology', 'Art/Craft (Photography)', 'History', 'Library Use', 'Occult', 'Language (Other)', 'Psychology'], c: ['*'] },
+  { n: 'Police Detective', cr: [20, 50], f: DS, s: ['Law', 'Listen', 'Psychology', 'Spot Hidden'], c: [['Art/Craft (Acting)', 'Disguise'], FIRE, IP, '*'] },
+  { n: 'Police Officer (Patrol)', cr: [9, 30], f: DS, s: ['Fighting (Brawl)', 'Firearms (Handgun)', 'First Aid', 'Law', 'Psychology', 'Spot Hidden'], c: [['Drive Auto', 'Ride'], IP] },
+  { n: 'Private Investigator', cr: [9, 30], f: DS, s: ['Art/Craft (Photography)', 'Disguise', 'Law', 'Library Use', 'Psychology', 'Spot Hidden'], c: [IP, '*'] },
+  { n: 'Professor', cr: [20, 70], f: 'EDU*4', s: ['Library Use', 'Language (Other)', 'Language (Own)', 'Psychology'], c: ['*', '*', '*', '*'] },
+  { n: 'Psychiatrist', cr: [30, 80], f: 'EDU*4', s: ['Language (Other)', 'Listen', 'Medicine', 'Persuade', 'Psychoanalysis', 'Psychology', 'Science (Biology)', 'Science (Chemistry)'], c: [] },
+  { n: 'Soldier', cr: [9, 30], f: DS, s: ['Dodge', 'Fighting (Brawl)', 'Firearms (Rifle/Shotgun)', 'Stealth', 'Survival'], c: [['Climb', 'Swim'], SAFE, SAFE] },
+];
+const parseF = f => f.split('|').map(o => o.split('+').map(t => { const [k, m] = t.split('*'); return [k, +m]; }));
+const fPoints = opt => opt.reduce((a, [k, m]) => a + num(S.stats[k]) * m, 0);
+const fText = opt => opt.map(([k, m]) => `${k}×${m}`).join(' + ');
+
+/* find the sheet skill for a preset skill name, creating a specialisation if needed */
+function resolveSkill(name) {
+  const low = name.toLowerCase();
+  let sk = S.skills.find(x => x.name.toLowerCase() === low);
+  if (sk) return sk;
+  const root = name.replace(/\s*\(.*$/, '');
+  if (root === name) { // generic name -> first specialised entry, e.g. Art/Craft -> Art/Craft (specify)
+    sk = S.skills.find(x => x.name.toLowerCase().startsWith(low + ' ('));
+    if (sk) return sk;
+  }
+  const tpl = S.skills.find(x => x.name.toLowerCase().startsWith(root.toLowerCase() + ' (') && typeof x.base === 'number');
+  sk = { id: uid(), name, base: tpl ? tpl.base : 1, occ: 0, int: 0, other: 0, tick: false };
+  S.skills.push(sk);
+  return sk;
+}
+
+function openOccupations() {
+  const dlg = $('#dlg');
+  const q = h('input', { type: 'search', placeholder: 'Search occupations…' });
+  const listEl = h('div', { style: 'max-height:50vh;overflow:auto;margin-top:.5rem' });
+  const drawList = () => {
+    const t = q.value.trim().toLowerCase();
+    listEl.replaceChildren(...OCC.filter(o => !t || o.n.toLowerCase().includes(t)).map(o =>
+      h('button', { style: 'width:100%;text-align:left;margin-bottom:.35rem', onclick: () => detail(o) },
+        h('b', {}, o.n), h('div', { style: 'font-size:.8rem;opacity:.8' }, `Credit ${o.cr[0]}–${o.cr[1]} · ${parseF(o.f).map(fText).join(' or ')}`))));
+  };
+  q.addEventListener('input', drawList);
+  const home = () => {
+    dlg.replaceChildren(h('h2', {}, 'Occupation presets'), q, listEl,
+      h('p', { class: 'note' }, 'Presets are a starting point — check them against your rulebook; you can edit every skill afterwards.'),
+      h('button', { style: 'width:100%', onclick: () => dlg.close() }, 'Close'));
+    drawList();
+  };
+  const detail = o => {
+    const opts = parseF(o.f); let fi = 0;
+    const picks = o.c.map(() => '');
+    const allNames = S.skills.map(x => x.name).sort();
+    const formula = opts.length === 1
+      ? h('div', {}, 'Skill points: ', h('b', {}, fText(opts[0]) + ' = ' + fPoints(opts[0])))
+      : h('div', {}, 'Skill points (choose one):', opts.map((opt, i) => h('label', { class: 'row', style: 'padding:.2rem 0' },
+          h('input', { type: 'radio', name: 'occf', checked: i === 0, onchange: () => { fi = i; } }), fText(opt) + ' = ' + fPoints(opt))));
+    const slots = o.c.map((slot, i) => {
+      const names = slot === '*' ? allNames : slot;
+      const sel = h('select', {}, h('option', { value: '' }, slot === '*' ? '— any skill —' : '— choose —'), ...names.map(n => h('option', { value: n }, n)));
+      sel.addEventListener('change', () => { picks[i] = sel.value; });
+      return h('div', { style: 'margin:.3rem 0' }, sel);
+    });
+    dlg.replaceChildren(h('h2', {}, o.n),
+      h('div', {}, 'Credit Rating: ', h('b', {}, `${o.cr[0]}–${o.cr[1]}`)), formula,
+      h('div', { style: 'margin-top:.5rem' }, 'Occupation skills: ', o.s.join(', ')),
+      slots.length ? h('div', { style: 'margin-top:.5rem' }, 'Choose the rest:', slots) : null,
+      h('div', { class: 'btns', style: 'grid-template-columns:1fr 2fr' },
+        h('button', { onclick: home }, 'Back'),
+        h('button', { class: 'pri', onclick: () => {
+          const ids = [];
+          for (const n of [...o.s, ...picks.filter(Boolean)]) { const sk = resolveSkill(n); if (!ids.includes(sk.id)) ids.push(sk.id); }
+          S.info.occupation = o.n;
+          S.occ = { name: o.n, cr: o.cr, opt: opts[fi], ids };
+          S.occPoints = fPoints(opts[fi]);
+          commit(); dlg.close();
+          ui.tab = 'skills'; ui.edit = true; ui.occOnly = true; renderTab(); window.scrollTo(0, 0);
+          toast(o.n, [`${S.occPoints} occupation points`, `Credit Rating ${o.cr[0]}–${o.cr[1]}`, `${ids.length} occupation skills (★) — spread your points`], 'warn');
+        } }, 'Apply to character')));
+  };
+  home(); dlg.showModal();
+}
+
+function tabCombat() {
+  const wrap = h('div', {});
+  const quick = (label, skillName) => {
+    const s = findSkill(skillName);
+    return s ? h('button', { onclick: () => rollCheck(label, skillVal(s)) }, label, ' ', h('b', {}, live(() => skillVal(s)))) : null;
+  };
+  wrap.append(card('Quick rolls', h('div', { class: 'row' },
+    quick('Dodge', 'Dodge'), quick('Brawl', 'Fighting (Brawl)'),
+    h('span', { class: 'muted' }, 'Damage bonus ', h('b', {}, live(dmgBonus)), ' · Build ', h('b', {}, live(() => buildDb()[1])), ' · Move ', h('b', {}, live(moveRate))))));
+
+  const list = h('div', {});
+  const draw = () => {
+    list.replaceChildren(...S.weapons.map((w, i) => {
+      const f = (label, key, o = {}) => {
+        const e = h('input', { value: w[key] ?? '', inputmode: o.num ? 'numeric' : null, placeholder: o.ph });
+        e.addEventListener('input', () => { w[key] = e.value; saveSoon(); });
+        return h('label', { class: 'fld' }, h('span', {}, label), e);
+      };
+      const sel = h('select', {}, h('option', { value: '' }, '— skill —'),
+        ...S.skills.map(s => h('option', { value: s.id }, s.name)));
+      sel.value = w.skill || '';
+      sel.addEventListener('change', () => { w.skill = sel.value; commit(); });
+      const sk = () => S.skills.find(s => s.id === w.skill);
+      const ammo = h('input', { value: w.ammo ?? '', inputmode: 'numeric' });
+      ammo.addEventListener('input', () => { w.ammo = ammo.value; saveSoon(); });
+      return h('div', { class: 'weapon' },
+        h('div', { class: 'wtop' }, f('Weapon', 'name'), h('label', { class: 'fld' }, h('span', {}, 'Skill'), sel)),
+        h('div', { class: 'grid' }, f('Damage', 'damage', { ph: '1d6+db' }), f('Range', 'range'), f('Attacks / round', 'atk'),
+          h('label', { class: 'fld' }, h('span', {}, 'Ammo'), h('div', { class: 'row', style: 'flex-wrap:nowrap' }, ammo,
+            h('button', { onclick: () => { const v = Math.max(0, num(w.ammo) - 1); w.ammo = String(v); ammo.value = v; saveSoon(); }, title: 'Fire one round' }, '−1'))),
+          f('Malfunction', 'malf')),
+        h('div', { class: 'row', style: 'margin-top:.6rem' },
+          h('span', { class: 'hit' }, 'Hit ', live(() => sk() ? skillVal(sk()) : '—'), '%'),
+          h('button', { class: 'pri', onclick: () => {
+            const s = sk(); if (!s) return toast('Pick a skill for this weapon', '');
+            rollCheck(w.name || 'Attack', skillVal(s));
+          } }, 'Attack'),
+          h('button', { onclick: () => {
+            const r = rollExpr(w.damage || '0');
+            if (!r) return toast('Bad damage expression', w.damage || '');
+            logRoll(`${w.name || 'Weapon'} damage: ${r.total} (${r.detail})`);
+            toast(`${w.name || 'Weapon'} damage  ${w.damage}`, [r.total, r.detail], 'ok');
+          } }, 'Damage'),
+          h('button', { class: 'danger sm', style: 'margin-left:auto', onclick: () => { if (confirm('Remove this weapon?')) { S.weapons.splice(i, 1); commit(); draw(); } } }, 'Remove')));
+    }));
+  };
+  draw();
+  wrap.append(card('Weapons', list, h('button', { onclick: () => { S.weapons.push({ id: uid(), name: '', skill: '', damage: '1d6', range: '', atk: '1', ammo: '', malf: '' }); commit(); draw(); } }, '+ Add weapon'),
+    h('p', { class: 'note' }, 'Damage accepts dice and “db” for your damage bonus, e.g. 1d3+db or 2d6+4. Extreme-success impales are not automated.')));
+  return wrap;
+}
+
+function tabStory() {
+  return h('div', { class: 'grid w2' }, STORY.map(([k, label]) => card(label, h('textarea', {
+    rows: 4, value: S.story[k], oninput: e => { S.story[k] = e.target.value; saveSoon(); },
+  }))));
+}
+
+function tabGear() {
+  return h('div', {},
+    card('Cash & assets', h('div', { class: 'grid' }, fld('Spending level', 'gear.spending'), fld('Cash on hand', 'gear.cash')),
+      h('div', { style: 'height:.6rem' }), fld('Assets', 'gear.assets', { area: true, rows: 3 })),
+    card('Gear & possessions', fld('', 'gear.items', { area: true, rows: 10 })),
+    card('Notes', fld('', 'notes', { area: true, rows: 14 })));
+}
+
+function tabDice() {
+  const wrap = h('div', {});
+  const expr = h('input', { placeholder: 'e.g. 2d6+3', value: ui.expr || '' });
+  expr.addEventListener('input', () => { ui.expr = expr.value; });
+  const go = () => {
+    const r = rollExpr(expr.value);
+    if (!r) return toast('Bad dice expression', 'Try 2d6+3 or 1d10');
+    logRoll(`${expr.value}: ${r.total}  (${r.detail})`);
+    toast(expr.value, [r.total, r.detail], 'ok');
+  };
+  expr.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  wrap.append(card('Dice',
+    h('div', { class: 'dice' }, [4, 6, 8, 10, 12, 20].map(n => h('button', { onclick: () => { const r = rnd(n); logRoll(`d${n}: ${r}`); toast(`d${n}`, [r, ''], 'ok'); } }, 'd' + n)),
+      h('button', { onclick: () => { const { r, results } = d100(ui.mod); logRoll(`d100: ${r}${ui.mod ? ' [' + results.join('/') + ']' : ''}`); toast('d100' + modLabel(), [r, ''], 'ok'); } }, 'd100')),
+    h('p', { class: 'note' }, 'd100 uses the bonus/penalty setting in the top-right of the tab bar.'),
+    h('div', { class: 'row', style: 'margin-top:.6rem' }, h('div', { style: 'flex:1;min-width:160px' }, expr), h('button', { class: 'pri', onclick: go }, 'Roll'))),
+    card('Roll log', h('ul', { id: 'log' })));
+  setTimeout(updateLog);
+  return wrap;
+}
+
+const TABS = [['sheet', 'Sheet', tabSheet], ['skills', 'Skills', tabSkills], ['combat', 'Combat', tabCombat],
+  ['story', 'Backstory', tabStory], ['gear', 'Gear & Notes', tabGear], ['dice', 'Dice', tabDice]];
+
+/* ---------- render ---------- */
+const main = $('#main');
+function renderTab() {
+  calcs = [];
+  const t = TABS.find(x => x[0] === ui.tab) || TABS[0];
+  main.replaceChildren(t[2]());
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t[0]));
+  refresh();
+}
+/* static, paper-friendly copy of the sheet; only visible when printing / saving as PDF */
+function buildPrint() {
+  const st = S.stats, i = S.info;
+  const kv = (k, v) => h('div', {}, h('small', {}, k + ': '), h('b', {}, v ?? ''));
+  const box = (label, val, sub) => h('div', { class: 'box' }, h('small', {}, label),
+    h('div', { style: 'font-size:15px;font-weight:700' }, val), sub != null ? h('small', {}, sub) : null);
+  const skills = [...S.skills].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  const skillOf = id => S.skills.find(x => x.id === id);
+  const conds = [['major', 'Major wound'], ['unconscious', 'Unconscious'], ['dying', 'Dying'], ['temp', 'Temporary insanity'], ['indef', 'Indefinite insanity']]
+    .filter(([k]) => S.status[k]).map(x => x[1]);
+  const dodge = findSkill('Dodge');
+  $('#print').replaceChildren(...[
+    h('div', { class: 'phead' },
+      h('div', { style: 'flex:1' },
+        h('h1', {}, i.name || 'Unnamed Investigator'),
+        h('div', { class: 'pgrid info' }, kv('Occupation', i.occupation), kv('Player', i.player), kv('Age', i.age),
+          kv('Sex', i.sex), kv('Residence', i.residence), kv('Birthplace', i.birthplace))),
+      S.portrait ? h('img', { src: S.portrait, alt: '' }) : null),
+    h('h3', {}, 'Characteristics'),
+    h('div', { class: 'pgrid stats8' }, Object.keys(STAT_NAMES).map(k => box(k, st[k], `${half(st[k])} / ${fifth(st[k])}`))),
+    h('h3', {}, 'Status'),
+    h('div', { class: 'pgrid stats8' },
+      box('HP', `${S.cur.hp} / ${maxHP()}`), box('MP', `${S.cur.mp} / ${maxMP()}`),
+      box('Sanity', S.cur.san, `start ${st.POW} · max ${maxSAN()}`), box('Luck', S.cur.luck),
+      box('Move', moveRate()), box('Build', buildDb()[1]), box('Damage Bonus', dmgBonus()),
+      box('Dodge', dodge ? skillVal(dodge) : half(st.DEX))),
+    conds.length ? h('div', { style: 'margin-top:4px' }, h('b', {}, 'Conditions: '), conds.join(', ')) : null,
+    h('h3', {}, 'Skills'),
+    h('div', { class: 'sk' }, skills.map(s => h('div', {},
+      h('span', { class: 'n' }, (S.occ && S.occ.ids.includes(s.id) ? '★ ' : '') + s.name),
+      h('b', {}, skillVal(s)), h('i', {}, half(skillVal(s))), h('i', {}, fifth(skillVal(s)))))),
+    h('h3', {}, 'Weapons'),
+    h('table', {}, h('thead', {}, h('tr', {}, ['Weapon', 'Skill', '%', 'Damage', 'Range', 'Attacks', 'Ammo', 'Malf.'].map(c => h('th', {}, c)))),
+      h('tbody', {}, S.weapons.map(w => { const sk = skillOf(w.skill); return h('tr', {},
+        h('td', {}, w.name), h('td', {}, sk ? sk.name : ''), h('td', {}, sk ? skillVal(sk) : ''),
+        h('td', {}, w.damage), h('td', {}, w.range), h('td', {}, w.atk), h('td', {}, w.ammo), h('td', {}, w.malf)); }))),
+    h('h3', {}, 'Backstory'),
+    h('div', { class: 'pgrid two' }, STORY.map(([k, label]) => h('div', {}, h('small', {}, label), h('div', { class: 'txt' }, S.story[k])))),
+    h('h3', {}, 'Cash & possessions'),
+    h('div', { class: 'pgrid info' }, kv('Spending level', S.gear.spending), kv('Cash', S.gear.cash)),
+    h('div', { class: 'pgrid two', style: 'margin-top:4px' },
+      h('div', {}, h('small', {}, 'Assets'), h('div', { class: 'txt' }, S.gear.assets)),
+      h('div', {}, h('small', {}, 'Gear'), h('div', { class: 'txt' }, S.gear.items))),
+    S.notes ? [h('h3', {}, 'Notes'), h('div', { class: 'txt' }, S.notes)] : null].flat().filter(Boolean));
+}
+let titleBeforePrint = null;
+function doPrint() {
+  persist(); buildPrint();
+  titleBeforePrint = document.title;
+  document.title = (S.info.name || 'Investigator') + ' - Call of Cthulhu 7e';
+  window.print();
+}
+function buildHeader() {
+  hcalcs = [];
+  const btn = (label, fn) => h('button', { onclick: fn }, label);
+  const segBtns = [[-2, 'P2'], [-1, 'P1'], [0, '–'], [1, 'B1'], [2, 'B2']].map(([m, l]) => {
+    const b = h('button', { class: ui.mod === m ? 'on' : '', 'data-m': m, title: m < 0 ? `${-m} penalty dice` : m > 0 ? `${m} bonus dice` : 'No bonus/penalty dice',
+      onclick: () => { ui.mod = m; segBtns.forEach(x => x.classList.toggle('on', +x.dataset.m === m)); } }, l);
+    return b;
+  });
+  $('#hd').replaceChildren(
+    h('div', { class: 'top' },
+      h('div', { class: 'row', style: 'flex-wrap:nowrap;min-width:0;gap:.6rem' }, avatar(),
+        h('div', { class: 'who' },
+          h('b', {}, live(() => S.info.name || 'Unnamed Investigator', hcalcs)),
+          h('small', {}, live(() => [S.info.occupation, S.info.age ? 'age ' + S.info.age : ''].filter(Boolean).join(' · ') || ' ', hcalcs)))),
+      h('div', { class: 'acts' }, btn('Library', openLibrary), btn('Open file', () => $('#filein').click()), btn('Save file', saveFile), btn('Print / PDF', doPrint))),
+    h('div', { class: 'vitals' }, tile('hp', 'HP'), tile('mp', 'MP'), tile('san', 'SAN'), tile('luck', 'Luck')),
+    h('nav', { class: 'tabs' },
+      TABS.map(([id, label]) => h('button', { class: 'tab', 'data-tab': id, onclick: () => { ui.tab = id; renderTab(); window.scrollTo(0, 0); } }, label)),
+      h('div', { class: 'seg' }, h('span', {}, 'Dice'), segBtns)));
+}
+
+/* ---------- files ---------- */
+function switchTo(S2, id) {
+  persist(); S = S2; curId = id; persist(); fullRender();
+}
+function newSheet() { switchTo(blank(), uid()); ui.tab = 'sheet'; renderTab(); }
+function openLibrary() {
+  persist();
+  const dlg = $('#dlg');
+  const draw = () => {
+    const items = listSheets();
+    dlg.replaceChildren(h('h2', {}, 'Character library'),
+      h('div', { style: 'max-height:55vh;overflow:auto' }, items.map(it => h('div', { class: 'row', style: 'padding:.4rem 0;border-bottom:1px solid var(--line);flex-wrap:nowrap' },
+        h('button', { style: 'flex:1;text-align:left;min-width:0', class: it.id === curId ? 'pri' : '', onclick: () => {
+          if (it.id !== curId) switchTo(merge(blank(), JSON.parse(localStorage.getItem(PFX + it.id))), it.id);
+          dlg.close();
+        } }, h('div', { class: 'row', style: 'flex-wrap:nowrap;gap:.6rem' },
+          it.img ? h('img', { src: it.img, class: 'av', alt: '' }) : h('span', { class: 'av' }),
+          h('div', {}, h('b', {}, it.name), h('div', { style: 'font-size:.8rem;opacity:.8' }, [it.occ, it.age ? 'age ' + it.age : ''].filter(Boolean).join(' · ') || ' ')))),
+        h('button', { class: 'sm', title: 'Duplicate', onclick: () => {
+          const c = JSON.parse(localStorage.getItem(PFX + it.id)); c.info.name = (c.info.name || 'Unnamed Investigator') + ' (copy)';
+          c._saved = Date.now(); localStorage.setItem(PFX + uid(), JSON.stringify(c)); draw();
+        } }, 'Copy'),
+        h('button', { class: 'sm danger', title: 'Delete', onclick: () => {
+          if (!confirm(`Delete "${it.name}" from this device? Save it to a file first if you want a backup.`)) return;
+          localStorage.removeItem(PFX + it.id);
+          if (it.id === curId) {
+            const next = listSheets()[0];
+            if (next) { S = merge(blank(), JSON.parse(localStorage.getItem(PFX + next.id))); curId = next.id; }
+            else { S = blank(); curId = uid(); }
+            persist(); fullRender();
+          }
+          draw();
+        } }, 'Delete')))),
+      h('div', { class: 'btns', style: 'grid-template-columns:1fr 1fr' },
+        h('button', { class: 'pri', onclick: () => { dlg.close(); newSheet(); } }, '+ New character'),
+        h('button', { onclick: () => { dlg.close(); $('#filein').click(); } }, 'Import file')),
+      h('button', { style: 'width:100%', onclick: () => dlg.close() }, 'Close'));
+  };
+  draw(); dlg.showModal();
+}
+function saveFile() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const a = h('a', { href: URL.createObjectURL(blob), download: ((S.info.name || 'investigator').replace(/[^\w\- ]+/g, '').trim() || 'investigator') + '.coc7.json' });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  saveSoon();
+}
+$('#filein').addEventListener('change', e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const o = JSON.parse(rd.result);
+      if (!o || typeof o !== 'object' || !o.stats || !Array.isArray(o.skills)) throw new Error('Not an investigator file');
+      switchTo(merge(blank(), o), uid());
+      toast('Opened', S.info.name || f.name);
+    } catch (err) { toast('Could not open file', String(err.message || err)); }
+  };
+  rd.readAsText(f);
+});
+function fullRender() { normalize(); buildHeader(); renderTab(); }
+
+window.addEventListener('beforeprint', buildPrint); // also covers Ctrl/Cmd+P
+window.addEventListener('afterprint', () => { if (titleBeforePrint) { document.title = titleBeforePrint; titleBeforePrint = null; } });
+window.addEventListener('pagehide', persist);
+
+fullRender(); persist();
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
