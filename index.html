@@ -147,7 +147,10 @@ dialog hr{border:0;border-top:1px solid var(--line);margin:.8rem 0}
 
 .printtab{display:block}
 @media (max-width:640px){
-  .vitals{gap:.3rem}.tile .pm{width:34px}.tn{font-size:1.5rem}
+  /* phones: no +/- buttons (tap the tile for the adjust popup), compact tiles */
+  .vitals{gap:.3rem}.tile .pm{display:none}.tn{font-size:1.4rem}.tn small{font-size:.7rem}
+  .tl{font-size:.6rem;letter-spacing:.08em}.te{font-size:.58rem;text-align:center;line-height:1.15}
+  .tile .tv{width:100%;padding:.25rem 0}
   .srow.edit,.shead{grid-template-columns:30px 1fr 52px 52px 52px 52px 44px 36px}
 }
 @media print{
