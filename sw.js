@@ -1,6 +1,6 @@
 // Cache the app shell so it works offline after the first load over http(s).
-const CACHE = 'coc7-v1';
-const FILES = ['./', 'index.html', 'manifest.webmanifest'];
+const CACHE = 'coc7-v2';
+const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
