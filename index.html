@@ -503,6 +503,7 @@ const card = (title, ...kids) => h('section', { class: 'card' }, title ? h('h2',
 const MAXES = { hp: maxHP, mp: maxMP, san: maxSAN, luck: () => 99 };
 function applyDelta(kind, d, detail) {
   const before = S.cur[kind];
+  S.creation = false; // a manual change means play has begun; otherwise normalize() would reset the vitals to full
   S.cur[kind] = clamp(before + d, 0, MAXES[kind]());
   const real = S.cur[kind] - before, warns = [];
   if (kind === 'hp' && real < 0) {
