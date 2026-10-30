@@ -91,6 +91,13 @@ main{padding:.75rem;max-width:1200px;margin:0 auto}
 .srow.edit,.shead{grid-template-columns:34px 1fr 68px 68px 68px 68px 52px 44px}
 .shead{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .shead.play{grid-template-columns:34px 1fr 56px 46px 46px}
+.sheads .shead.h2{display:none}
+@media (min-width:760px){
+  .sheads{display:grid;grid-template-columns:1fr 1fr;column-gap:1.5rem}
+  .sheads .shead.h2{display:grid}
+  .scols{column-count:2;column-gap:1.5rem}
+  .scols .srow{break-inside:avoid}
+}
 .sname{text-align:left;background:none;border:0;border-radius:6px;padding:.35rem .4rem;min-height:44px}
 .sname:active{background:var(--panel2)}
 .sval{font-size:1.25rem;text-align:center}
@@ -1185,9 +1192,11 @@ function tabSkills() {
   }
 
   const list = h('div', {});
+  const rowsEl = h('div', { class: ui.edit ? '' : 'scols' }); // play view: skills flow into two columns on wide screens
+  const playHead = cls => h('div', { class: 'shead play ' + cls }, h('span', {}, 'Used'), h('span', {}, 'Skill (tap to roll)'), h('span', { style: 'text-align:center' }, '%'), h('span', {}, '½'), h('span', {}, '⅕'));
   list.append(ui.edit
     ? h('div', { class: 'shead' }, h('span', {}, 'Used'), h('span', {}, 'Skill'), h('span', {}, 'Base'), h('span', {}, 'Occ'), h('span', {}, 'Int'), h('span', {}, 'Other'), h('span', {}, 'Total'), h('span', {}))
-    : h('div', { class: 'shead play' }, h('span', {}, 'Used'), h('span', {}, 'Skill (tap to roll)'), h('span', { style: 'text-align:center' }, '%'), h('span', {}, '½'), h('span', {}, '⅕')));
+    : h('div', { class: 'sheads' }, playHead('h1'), playHead('h2')), rowsEl);
 
   S.skills.forEach((s, i) => {
     const tick = h('input', { type: 'checkbox', checked: s.tick, title: 'Mark as used successfully (for the improvement phase)' });
@@ -1210,7 +1219,7 @@ function tabSkills() {
         h('button', { class: 'danger sm', title: 'Delete skill', onclick: () => { if (confirm(`Delete "${s.name}"?`)) { S.skills.splice(i, 1); commit(); renderTab(); } } }, '×'));
     }
     rows.push({ el, s });
-    list.append(el);
+    rowsEl.append(el);
   });
   wrap.append(card(null, list));
   if (ui.edit) {
