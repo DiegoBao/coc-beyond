@@ -89,11 +89,12 @@ main{padding:.75rem;max-width:1200px;margin:0 auto}
 
 /* skills */
 .srow,.shead{display:grid;align-items:center;gap:.4rem;padding:.2rem .1rem;border-bottom:1px solid var(--line)}
-.srow{grid-template-columns:34px 1fr 56px 46px 46px}
+.srow{grid-template-columns:34px minmax(0,1fr) 56px 46px 46px}
 .srow[hidden]{display:none}
-.srow.edit,.shead{grid-template-columns:34px 1fr 68px 68px 68px 68px 52px 44px}
+.srow.edit,.shead{grid-template-columns:34px minmax(0,1fr) 68px 68px 68px 68px 52px 44px}
 .shead{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.shead.play{grid-template-columns:34px 1fr 56px 46px 46px}
+.shead.play{grid-template-columns:34px minmax(0,1fr) 56px 46px 46px}
+.shead span:nth-child(n+3){text-align:center}
 .sheads .shead.h2{display:none}
 @media (min-width:760px){
   .sheads{display:grid;grid-template-columns:1fr 1fr;column-gap:1.5rem}
@@ -155,7 +156,7 @@ dialog hr{border:0;border-top:1px solid var(--line);margin:.8rem 0}
   .vitals{gap:.3rem}.tile .pm{display:none}.tn{font-size:1.4rem}.tn small{font-size:.7rem}
   .tl{font-size:.6rem;letter-spacing:.08em}.te{font-size:.58rem;text-align:center;line-height:1.15}
   .tile .tv{width:100%;padding:.25rem 0}
-  .srow.edit,.shead{grid-template-columns:30px 1fr 52px 52px 52px 52px 44px 36px}
+  .srow.edit,.shead{grid-template-columns:30px minmax(0,1fr) 52px 52px 52px 52px 44px 36px}
 }
 @media print{
   :root{--bg:#fff;--panel:#fff;--panel2:#f3f3f3;--line:#999;--text:#000;--muted:#555;--accent:#000}
