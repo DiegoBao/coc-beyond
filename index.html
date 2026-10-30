@@ -41,6 +41,9 @@ input[type=number]{-moz-appearance:textfield}
 .who b{font-family:Georgia,serif;font-size:1.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .who small{color:var(--muted)}
 .acts{display:flex;gap:.4rem}
+.menubtn{display:none;flex:none;font-size:1.3rem;line-height:1;padding:.3rem .7rem}
+#mnu{display:grid;gap:.5rem}
+#mnu button{text-align:left}
 .vitals{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
 .tile{display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .tile .pm{border:0;border-radius:0;background:var(--panel2);width:44px;padding:0;font-size:1.5rem}
@@ -148,6 +151,7 @@ dialog hr{border:0;border-top:1px solid var(--line);margin:.8rem 0}
 .printtab{display:block}
 @media (max-width:640px){
   /* phones: no +/- buttons (tap the tile for the adjust popup), compact tiles */
+  .top{gap:.5rem}.acts{display:none}.menubtn{display:block}.who b{font-size:1.1rem}
   .vitals{gap:.3rem}.tile .pm{display:none}.tn{font-size:1.4rem}.tn small{font-size:.7rem}
   .tl{font-size:.6rem;letter-spacing:.08em}.te{font-size:.58rem;text-align:center;line-height:1.15}
   .tile .tv{width:100%;padding:.25rem 0}
@@ -1517,6 +1521,15 @@ function doPrint() {
   document.title = (S.info.name || 'Investigator') + ' - Call of Cthulhu 7e';
   window.print();
 }
+/* phones: the header actions live in a menu dialog */
+function openMenu() {
+  const dlg = $('#dlg');
+  const item = (label, fn) => h('button', { onclick: () => { dlg.close(); fn(); } }, label);
+  dlg.replaceChildren(h('h2', {}, 'Menu'),
+    h('div', { id: 'mnu' }, item('Library', openLibrary), item('Open file', () => $('#filein').click()), item('Save file', saveFile), item('Print / PDF', doPrint)),
+    h('hr'), h('button', { style: 'width:100%', onclick: () => dlg.close() }, 'Close'));
+  dlg.showModal();
+}
 function buildHeader() {
   hcalcs = [];
   const btn = (label, fn) => h('button', { onclick: fn }, label);
@@ -1531,7 +1544,8 @@ function buildHeader() {
         h('div', { class: 'who' },
           h('b', {}, live(() => S.info.name || 'Unnamed Investigator', hcalcs)),
           h('small', {}, live(() => [S.info.occupation, S.info.age ? 'age ' + S.info.age : ''].filter(Boolean).join(' · ') || ' ', hcalcs)))),
-      h('div', { class: 'acts' }, btn('Library', openLibrary), btn('Open file', () => $('#filein').click()), btn('Save file', saveFile), btn('Print / PDF', doPrint))),
+      h('div', { class: 'acts' }, btn('Library', openLibrary), btn('Open file', () => $('#filein').click()), btn('Save file', saveFile), btn('Print / PDF', doPrint)),
+      h('button', { class: 'menubtn', title: 'Menu', 'aria-label': 'Menu', onclick: openMenu }, '☰')),
     h('div', { class: 'vitals' }, tile('hp', 'HP'), tile('mp', 'MP'), tile('san', 'SAN'), tile('luck', 'Luck')),
     h('nav', { class: 'tabs' },
       TABS.map(([id, label]) => h('button', { class: 'tab', 'data-tab': id, onclick: () => { ui.tab = id; renderTab(); window.scrollTo(0, 0); } }, label)),
