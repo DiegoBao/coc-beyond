@@ -156,7 +156,11 @@ dialog hr{border:0;border-top:1px solid var(--line);margin:.8rem 0}
   .vitals{gap:.3rem}.tile .pm{display:none}.tn{font-size:1.4rem}.tn small{font-size:.7rem}
   .tl{font-size:.6rem;letter-spacing:.08em}.te{font-size:.58rem;text-align:center;line-height:1.15}
   .tile .tv{width:100%;padding:.25rem 0}
-  .srow.edit,.shead{grid-template-columns:30px minmax(0,1fr) 52px 52px 52px 52px 44px 36px}
+  /* edit view on phones: name gets its own full-width line, the numbers sit below it */
+  .srow.edit,.shead:not(.play){grid-template-columns:30px repeat(4,minmax(0,1fr)) 44px 36px;row-gap:.3rem}
+  .srow.edit>:nth-child(2),.shead:not(.play)>:nth-child(2){grid-column:2/-1}
+  .srow.edit>:nth-child(3),.shead:not(.play)>:nth-child(3){grid-column:2}
+  .srow.edit{padding:.4rem .1rem}
 }
 @media print{
   :root{--bg:#fff;--panel:#fff;--panel2:#f3f3f3;--line:#999;--text:#000;--muted:#555;--accent:#000}
